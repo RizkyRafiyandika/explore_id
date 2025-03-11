@@ -31,6 +31,22 @@ class _MyHomeState extends State<MyHome> {
           ),
         ],
       ),
+      body: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Hi Ven",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            ),
+            Text(
+              "Where Do You Want To Go",
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
