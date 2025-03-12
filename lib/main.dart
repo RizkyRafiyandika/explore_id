@@ -1,4 +1,5 @@
 import 'package:explore_id/pages/home.dart';
+import 'package:explore_id/pages/Welcomepage.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -15,9 +16,7 @@ class MyApp extends StatelessWidget {
       title: "Explore ID",
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blueGrey),
-      home: MyHome(),
+      home: WelcomePage(),
     );
   }
 }
-
-
