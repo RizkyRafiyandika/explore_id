@@ -25,7 +25,7 @@ class _MyHomeState extends State<MyHome> {
               },
               child: CircleAvatar(
                 radius: 20, // Atur ukuran foto profil
-                backgroundImage: AssetImage("assets/profile_pic.png"),
+                backgroundImage: AssetImage("assets/Profile.png"),
               ),
             ),
           ),
