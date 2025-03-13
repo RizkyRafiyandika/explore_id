@@ -1,5 +1,6 @@
 import 'package:explore_id/pages/Splash_Screen.dart';
 import 'package:explore_id/pages/home.dart';
+import 'package:explore_id/widget/navBar.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: "Explore ID",
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blueGrey),
-      home: SplashScreen(),
+      home: NavBar(),
     );
   }
 }

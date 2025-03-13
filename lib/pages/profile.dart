@@ -10,6 +10,6 @@ class MyProfile extends StatefulWidget {
 class _MyProfileState extends State<MyProfile> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: Text("data")));
+    return Scaffold(appBar: AppBar(title: Text("Profile")));
   }
 }
