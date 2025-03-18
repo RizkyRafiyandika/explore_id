@@ -3,7 +3,9 @@ import 'package:explore_id/models/category.dart';
 import 'package:explore_id/models/explore.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/pages/profile.dart';
+import 'package:explore_id/provider/userProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MyHome extends StatefulWidget {
   const MyHome({super.key});
@@ -14,12 +16,23 @@ class MyHome extends StatefulWidget {
 
 class _MyHomeState extends State<MyHome> {
   @override
+  void initState() {
+    super.initState();
+
+    // Ambil data user saat pertama kali widget dibuat
+    Future.delayed(Duration.zero, () {
+      Provider.of<MyUserProvider>(context, listen: false).fetchUserData();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<MyUserProvider>(context);
     return Scaffold(
       extendBody: true, // 🔥 Tambahkan ini agar navbar tidak tertutupi
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(80),
-        child: _MyAppBar(context),
+        child: _MyAppBar(context, userProvider.username),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -181,7 +194,7 @@ Padding _ListExplore() {
   );
 }
 
-AppBar _MyAppBar(BuildContext context) {
+AppBar _MyAppBar(BuildContext context, String username) {
   return AppBar(
     backgroundColor: tdwhite,
     elevation: 0,
@@ -206,7 +219,7 @@ AppBar _MyAppBar(BuildContext context) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Hi Ven",
+              "Hi $username",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -262,32 +275,35 @@ class _ListTrip extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Image.asset(trip.imagePath, fit: BoxFit.cover),
-                ),
-                Positioned(
-                  bottom: 0, // Posisikan teks di bawah gambar
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(8),
-                    color: Colors.black.withOpacity(
-                      0.5,
-                    ), // Latar belakang transparan
-                    child: Text(
-                      trip.name,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white, // Pastikan teks terbaca
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.asset(trip.imagePath, fit: BoxFit.fill),
+                  ),
+                  Positioned(
+                    bottom: 0, // Posisikan teks di bawah gambar
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: EdgeInsets.all(8),
+                      color: Colors.black.withOpacity(
+                        0.5,
+                      ), // Latar belakang transparan
+                      child: Text(
+                        trip.name,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white, // Pastikan teks terbaca
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -306,10 +322,20 @@ class _title_ListTrip extends StatelessWidget {
           padding: const EdgeInsets.only(left: 16),
           child: Text(
             "List Trip",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: tdcyan,
+            ),
           ),
         ),
-        TextButton(onPressed: () {}, child: Text("View All")),
+        TextButton(
+          onPressed: () {},
+          child: Text(
+            "View All",
+            style: TextStyle(fontWeight: FontWeight.w400, color: Colors.black),
+          ),
+        ),
       ],
     );
   }
