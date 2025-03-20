@@ -1,5 +1,4 @@
 import 'package:explore_id/pages/sign_in.dart';
-import 'package:explore_id/pages/sign_up.dart';
 import 'package:explore_id/services/auth_firebase.dart';
 import 'package:flutter/material.dart';
 
@@ -67,7 +66,7 @@ class MySettingPage extends StatelessWidget {
               await _auth.signOut();
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => MySignUp()),
+                MaterialPageRoute(builder: (context) => MyLogin()),
                 (route) => false, // Kembali ke Login
               );
             },

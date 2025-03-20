@@ -65,7 +65,7 @@ class _MyProfileState extends State<MyProfile> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage('assets/profile.jpg'),
+                    backgroundImage: AssetImage('assets/profile_pic.jpg'),
                   ),
                   SizedBox(height: 10),
                   Text(

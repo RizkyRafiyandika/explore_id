@@ -26,9 +26,9 @@ class _NavBarState extends State<NavBar> {
 
           // Floating Navbar
           Positioned(
-            bottom: 20,
-            left: 20,
-            right: 20,
+            bottom: 0,
+            left: 0,
+            right: 0,
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.transparent,

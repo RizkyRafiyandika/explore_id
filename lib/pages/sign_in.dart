@@ -1,3 +1,4 @@
+import 'package:explore_id/pages/sign_up.dart';
 import 'package:explore_id/services/auth_firebase.dart';
 import 'package:explore_id/widget/navBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -67,9 +68,38 @@ class _MyLoginState extends State<MyLogin> {
             ElevatedButton(onPressed: signIn, child: Text("Login")),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (e) => MySignUp()),
+                );
               },
               child: Text("Back"),
+            ),
+            TextButton(
+              onPressed: () async {
+                final user = await _auth.signInWithGoogle();
+                if (user != null) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (e) => NavBar()),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Google Sign-In failed")),
+                  );
+                }
+              },
+              child: Text("Google"),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _auth.signInWithFacebook();
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (e) => NavBar()),
+                // );
+              },
+              child: Text("Facebook"),
             ),
           ],
         ),

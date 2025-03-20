@@ -1,3 +1,4 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/category.dart';
 import 'package:explore_id/models/explore.dart';
@@ -29,7 +30,7 @@ class _MyHomeState extends State<MyHome> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<MyUserProvider>(context);
     return Scaffold(
-      extendBody: true, // 🔥 Tambahkan ini agar navbar tidak tertutupi
+      extendBody: true,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(80),
         child: _MyAppBar(context, userProvider.username),
@@ -43,6 +44,7 @@ class _MyHomeState extends State<MyHome> {
             _ListCategory(),
             _title_ListTrip(),
             _ListTrip(),
+            SizedBox(height: 50),
           ],
         ),
       ),
@@ -60,28 +62,36 @@ Padding _ListCategory() {
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final category = categories[index];
-          return Column(
-            children: [
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 8),
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle, // **Membuat gambar bulat**
-                  image: DecorationImage(
-                    image: AssetImage(
-                      category.imagePath,
-                    ), // **Gambar dari assets**
-                    fit: BoxFit.cover,
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyProfile()),
+              );
+            },
+            child: Column(
+              children: [
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 8),
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle, // **Membuat gambar bulat**
+                    image: DecorationImage(
+                      image: AssetImage(
+                        category.imagePath,
+                      ), // **Gambar dari assets**
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                category.name,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-            ],
+                SizedBox(height: 5),
+                Text(
+                  category.name,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -133,70 +143,70 @@ Container _SearchBar() {
 
 Padding _ListExplore() {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-    child: SizedBox(
-      height: 180,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: exploreItems.length,
-        itemBuilder: (context, index) {
-          final item = exploreItems[index];
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+    child: CarouselSlider.builder(
+      itemCount: exploreItems.length,
+      options: CarouselOptions(
+        height: 180, // Tinggi carousel
+        autoPlay: true, // Otomatis geser
+        enlargeCenterPage: true, // Membesarkan item tengah
+        viewportFraction: 0.9, // Ukuran item dalam layar
+        autoPlayInterval: Duration(seconds: 2), // Waktu antar geseran
+      ),
+      itemBuilder: (context, index, realIndex) {
+        final item = exploreItems[index];
 
-          return Container(
-            width: 360,
-            height: 180,
-            margin: EdgeInsets.only(right: 10), // Jarak antar item
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 3,
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Image.asset(item.picturePath, fit: BoxFit.cover),
-                  ),
-
-                  Positioned(
-                    bottom: 10, // Jarak dari bawah
-                    left: 100, // Jarak dari kiri
-                    right: 100, // Jarak dari kanan
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: tdcyan.withOpacity(
-                          0.8,
-                        ), // Tombol semi-transparan
-                        foregroundColor: Colors.black, // Warna teks
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => MyProfile()),
-                        );
-                      },
-                      child: Text(
-                        item.buttonText,
-                        style: TextStyle(fontWeight: FontWeight.bold),
+        return Container(
+          width: double.infinity,
+          height: 180,
+          margin: EdgeInsets.symmetric(horizontal: 5),
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            elevation: 3,
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.asset(item.picturePath, fit: BoxFit.cover),
+                ),
+                Positioned(
+                  bottom: 10,
+                  left: 50,
+                  right: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: tdcyan.withOpacity(0.8),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyProfile()),
+                      );
+                    },
+                    child: Text(
+                      item.buttonText,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     ),
   );
 }
 
 AppBar _MyAppBar(BuildContext context, String username) {
   return AppBar(
-    backgroundColor: tdwhite,
+    backgroundColor: Colors.transparent,
     elevation: 0,
     title: Row(
       children: [
