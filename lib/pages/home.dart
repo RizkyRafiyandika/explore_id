@@ -3,6 +3,7 @@ import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/category.dart';
 import 'package:explore_id/models/explore.dart';
 import 'package:explore_id/models/listTrip.dart';
+import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/provider/userProvider.dart';
 import 'package:flutter/material.dart';
@@ -16,14 +17,40 @@ class MyHome extends StatefulWidget {
 }
 
 class _MyHomeState extends State<MyHome> {
+  TextEditingController searchController = TextEditingController();
+  List<ListTrip> filteredTrips = ListTrips;
+
   @override
   void initState() {
     super.initState();
+    searchController.addListener(() => _runFilter(searchController.text));
 
     // Ambil data user saat pertama kali widget dibuat
     Future.delayed(Duration.zero, () {
       Provider.of<MyUserProvider>(context, listen: false).fetchUserData();
     });
+  }
+
+  void _runFilter(String query) {
+    if (query.isNotEmpty) {
+      final trips =
+          ListTrips.where(
+            (trip) => trip.name.toLowerCase().contains(query.toLowerCase()),
+          ).toList();
+      setState(() {
+        filteredTrips = trips;
+      });
+    } else {
+      setState(() {
+        filteredTrips = ListTrips;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -39,11 +66,11 @@ class _MyHomeState extends State<MyHome> {
         child: Column(
           children: [
             _ListExplore(),
-            _SearchBar(),
+            _SearchBar(searchController),
             SizedBox(height: 16),
             _ListCategory(),
             _title_ListTrip(),
-            _ListTrip(),
+            _ListTrip(trips: filteredTrips),
             SizedBox(height: 50),
           ],
         ),
@@ -99,7 +126,7 @@ Padding _ListCategory() {
   );
 }
 
-Container _SearchBar() {
+Container _SearchBar(searchController) {
   return Container(
     margin: const EdgeInsets.only(top: 16, left: 30, right: 30),
     decoration: BoxDecoration(
@@ -112,7 +139,8 @@ Container _SearchBar() {
       ],
     ),
     child: TextField(
-      // onChanged: (value) => _runFilter(value),
+      controller: searchController, // Tambahkan controller
+
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,
@@ -263,56 +291,60 @@ AppBar _MyAppBar(BuildContext context, String username) {
 }
 
 class _ListTrip extends StatelessWidget {
+  final List<ListTrip> trips; // Tambahkan parameter untuk daftar trip
+
+  _ListTrip({required this.trips}); // Constructor untuk menerima data
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: GridView.builder(
-        shrinkWrap: true, // Penting agar GridView tidak error
-        physics:
-            NeverScrollableScrollPhysics(), // Matikan scroll agar hanya Column yang bisa scroll
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // 2 kolom
+          crossAxisCount: 2,
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           childAspectRatio: 0.8,
         ),
-        itemCount: ListTrips.length,
+        itemCount: trips.length, // Gunakan daftar trip yang sudah difilter
         itemBuilder: (context, index) {
-          final trip = ListTrips[index];
-          return Card(
-            elevation: 3,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Image.asset(trip.imagePath, fit: BoxFit.fill),
-                  ),
-                  Positioned(
-                    bottom: 0, // Posisikan teks di bawah gambar
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: EdgeInsets.all(8),
-                      color: Colors.black.withOpacity(
-                        0.5,
-                      ), // Latar belakang transparan
-                      child: Text(
-                        trip.name,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white, // Pastikan teks terbaca
+          final trip = trips[index];
+          return GestureDetector(
+            onTap: () {},
+            child: Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Image.asset(trip.imagePath, fit: BoxFit.fill),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(8),
+                        color: Colors.black.withOpacity(0.5),
+                        child: Text(
+                          trip.name,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -340,7 +372,12 @@ class _title_ListTrip extends StatelessWidget {
           ),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MyNearbyPage()),
+            );
+          },
           child: Text(
             "View All",
             style: TextStyle(fontWeight: FontWeight.w400, color: Colors.black),
