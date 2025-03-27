@@ -1,5 +1,13 @@
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:explore_id/colors/color.dart';
+import 'package:explore_id/models/category.dart';
+import 'package:explore_id/models/explore.dart';
+import 'package:explore_id/models/listTrip.dart';
+import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
+import 'package:explore_id/provider/userProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MyHome extends StatefulWidget {
   const MyHome({super.key});
@@ -9,45 +17,63 @@ class MyHome extends StatefulWidget {
 }
 
 class _MyHomeState extends State<MyHome> {
-  final List<String> imagePaths = ['assets/Air Terjun,Sumba.jpeg'];
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<MyUserProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Padding(
-          padding: EdgeInsets.only(
-            top: 10,
-          ), // atur jarak satu sisi menggunakan only
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundImage: AssetImage('assets/Profile.png'),
-                radius: 20,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (e) => MyProfile()),
+                );
+              },
+              child: CircleAvatar(
+                radius: 20, // Atur ukuran foto profil
+                backgroundImage: AssetImage("assets/Profile.png"),
               ),
-              SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome Back',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  Text(
-                    'Username',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              SizedBox(width: 200),
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.notifications_none, size: 30),
-              ),
-            ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _title_ListTrip extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Text(
+            "List Trip",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: tdcyan,
+            ),
           ),
         ),
-      ),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MyNearbyPage()),
+            );
+          },
+          child: Text(
+            "View All",
+            style: TextStyle(fontWeight: FontWeight.w400, color: Colors.black),
+          ),
+        ),
+      ],
     );
   }
 }
