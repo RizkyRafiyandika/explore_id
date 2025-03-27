@@ -9,27 +9,44 @@ class MyHome extends StatefulWidget {
 }
 
 class _MyHomeState extends State<MyHome> {
+  final List<String> imagePaths = ['assets/Air Terjun,Sumba.jpeg'];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (e) => MyProfile()),
-                );
-              },
-              child: CircleAvatar(
-                radius: 20, // Atur ukuran foto profil
-                backgroundImage: AssetImage("assets/Profile.png"),
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: EdgeInsets.only(
+            top: 10,
+          ), // atur jarak satu sisi menggunakan only
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundImage: AssetImage('assets/Profile.png'),
+                radius: 20,
               ),
-            ),
+              SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome Back',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  Text(
+                    'Username',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              SizedBox(width: 200),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(Icons.notifications_none, size: 30),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
