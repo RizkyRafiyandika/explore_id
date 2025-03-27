@@ -14,7 +14,7 @@ class NavBar extends StatefulWidget {
 class _NavBarState extends State<NavBar> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [MyHome(), MyPlan(), MyCalender(), MyProfile()];
+  final List<Widget> _pages = [MyHome(), MyPlan(), MyCalendar(), MyProfile()];
 
   @override
   Widget build(BuildContext context) {

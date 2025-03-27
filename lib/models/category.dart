@@ -13,7 +13,7 @@ class CategoryModel {
 List<CategoryModel> categories = [
   CategoryModel(id: "1", name: "Culture", imagePath: "assets/prambanan.jpg"),
   CategoryModel(id: "2", name: "Beach", imagePath: "assets/pulau seribu.jpg"),
-  CategoryModel(id: "3", name: "Mountain", imagePath: "assets/malioboro.jpg"),
+  CategoryModel(id: "3", name: "Mountain", imagePath: "assets/bromo.jpg"),
   CategoryModel(
     id: "4",
     name: "Restaurant",

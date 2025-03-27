@@ -326,20 +326,38 @@ class _ListTrip extends StatelessWidget {
                       child: Image.asset(trip.imagePath, fit: BoxFit.fill),
                     ),
                     Positioned(
+                      height: 100,
                       bottom: 0,
                       left: 0,
                       right: 0,
                       child: Container(
                         padding: EdgeInsets.all(8),
-                        color: Colors.black.withOpacity(0.5),
-                        child: Text(
-                          trip.name,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                        color: tdwhite.withOpacity(0.1),
+                        child: Column(
+                          children: [
+                            Text(
+                              trip.name,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: tdwhite,
+                              ),
+                            ),
+                            Text(
+                              trip.daerah,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: tdwhite,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

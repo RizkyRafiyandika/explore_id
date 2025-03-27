@@ -1,7 +1,7 @@
+import 'package:explore_id/pages/welcome.dart';
 import 'package:explore_id/provider/userProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:explore_id/widget/navBar.dart';
 import 'package:provider/provider.dart'; // Tambahkan Provider
 
 void main() async {
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         title: "Explore ID",
         debugShowCheckedModeBanner: false,
         theme: ThemeData(primarySwatch: Colors.blueGrey),
-        home: NavBar(),
+        home: WelcomePage(),
       ),
     );
   }

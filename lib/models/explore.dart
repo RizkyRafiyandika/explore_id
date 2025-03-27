@@ -6,7 +6,7 @@ class ExploreModel {
 }
 
 final List<ExploreModel> exploreItems = [
-  ExploreModel(picturePath: "assets/malioboro.jpg"),
+  ExploreModel(picturePath: "assets/bromo.jpg"),
   ExploreModel(picturePath: "assets/prambanan.jpg"),
   ExploreModel(picturePath: "assets/pulau seribu.jpg"),
 ];
