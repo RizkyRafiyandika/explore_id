@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "90951538094",
+    "project_id": "explore-id-7b81e",
+    "storage_bucket": "explore-id-7b81e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:90951538094:android:ae1637b2b634a3cfaee43f",
+        "android_client_info": {
+          "package_name": "com.example.explore_id"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARoym-T2hcYqZ2AoiT3v1y2tD2VUbxpHs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

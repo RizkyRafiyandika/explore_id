@@ -1,9 +1,13 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/category.dart';
 import 'package:explore_id/models/explore.dart';
 import 'package:explore_id/models/listTrip.dart';
+import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
+import 'package:explore_id/provider/userProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MyHome extends StatefulWidget {
   const MyHome({super.key});
@@ -13,40 +17,86 @@ class MyHome extends StatefulWidget {
 }
 
 class _MyHomeState extends State<MyHome> {
+  TextEditingController searchController = TextEditingController();
+  List<ListTrip> filteredTrips = ListTrips;
+
+  @override
+  void initState() {
+    super.initState();
+    searchController.addListener(() => _runFilter(searchController.text));
+
+    // Ambil data user saat pertama kali widget dibuat
+    Future.delayed(Duration.zero, () {
+      Provider.of<MyUserProvider>(context, listen: false).fetchUserData();
+    });
+  }
+
+  void _runFilter(String query) {
+    if (query.isNotEmpty) {
+      final trips =
+          ListTrips.where(
+            (trip) => trip.name.toLowerCase().contains(query.toLowerCase()),
+          ).toList();
+      setState(() {
+        filteredTrips = trips;
+      });
+    } else {
+      setState(() {
+        filteredTrips = ListTrips;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<MyUserProvider>(context);
     return Scaffold(
+      extendBody: true,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(80), // AppBar lebih tinggi
-        child: _MyAppBar(context),
+        preferredSize: Size.fromHeight(80),
+        child: _MyAppBar(context, userProvider.username),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             _ListExplore(),
-            _SearchBar(),
+            _SearchBar(searchController),
             SizedBox(height: 16),
             _ListCategory(),
-            // SizedBox(height: 8),
             _title_ListTrip(),
-            _ListTrip(),
+            _ListTrip(trips: filteredTrips),
+            SizedBox(height: 50),
           ],
         ),
       ),
     );
   }
+}
 
-  Padding _ListCategory() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: SizedBox(
-        height: 120, // Tinggi ListView
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal, // **ListView Horizontal**
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final category = categories[index];
-            return Column(
+Padding _ListCategory() {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+    child: SizedBox(
+      height: 120, // Tinggi ListView
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal, // **ListView Horizontal**
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyProfile()),
+              );
+            },
+            child: Column(
               children: [
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 8),
@@ -68,222 +118,252 @@ class _MyHomeState extends State<MyHome> {
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ],
-            );
-          },
+            ),
+          );
+        },
+      ),
+    ),
+  );
+}
+
+Container _SearchBar(searchController) {
+  return Container(
+    margin: const EdgeInsets.only(top: 16, left: 30, right: 30),
+    decoration: BoxDecoration(
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.15),
+          blurRadius: 10,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    child: TextField(
+      controller: searchController, // Tambahkan controller
+
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.all(10),
+        hintText: "Search Here", // Pastikan ini bukan typo
+        hintStyle: const TextStyle(
+          color: Color.fromARGB(255, 186, 186, 186),
+          fontSize: 14,
+        ),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Image.asset("assets/icons/search.png"),
+        ),
+        suffixIcon: Container(
+          width: 100,
+          child: IntrinsicHeight(
+            child: Row(mainAxisAlignment: MainAxisAlignment.end),
+          ),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Container _SearchBar() {
-    return Container(
-      margin: const EdgeInsets.only(top: 16, left: 30, right: 30),
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+Padding _ListExplore() {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+    child: CarouselSlider.builder(
+      itemCount: exploreItems.length,
+      options: CarouselOptions(
+        height: 180, // Tinggi carousel
+        autoPlay: true, // Otomatis geser
+        enlargeCenterPage: true, // Membesarkan item tengah
+        viewportFraction: 0.9, // Ukuran item dalam layar
+        autoPlayInterval: Duration(seconds: 2), // Waktu antar geseran
       ),
-      child: TextField(
-        // onChanged: (value) => _runFilter(value),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.all(10),
-          hintText: "Search Here", // Pastikan ini bukan typo
-          hintStyle: const TextStyle(
-            color: Color.fromARGB(255, 186, 186, 186),
-            fontSize: 14,
-          ),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Image.asset("assets/icons/search.png"),
-          ),
-          suffixIcon: Container(
-            width: 100,
-            child: IntrinsicHeight(
-              child: Row(mainAxisAlignment: MainAxisAlignment.end),
+      itemBuilder: (context, index, realIndex) {
+        final item = exploreItems[index];
+
+        return Container(
+          width: double.infinity,
+          height: 180,
+          margin: EdgeInsets.symmetric(horizontal: 5),
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            elevation: 3,
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.asset(item.picturePath, fit: BoxFit.cover),
+                ),
+                Positioned(
+                  bottom: 10,
+                  left: 50,
+                  right: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: tdcyan.withOpacity(0.8),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyProfile()),
+                      );
+                    },
+                    child: Text(
+                      item.buttonText,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
+        );
+      },
+    ),
+  );
+}
+
+AppBar _MyAppBar(BuildContext context, String username) {
+  return AppBar(
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    title: Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MyProfile()),
+            );
+          },
+          child: CircleAvatar(
+            radius: 25,
+            backgroundImage: AssetImage(
+              "assets/profile_pic.jpg",
+            ), // Sesuaikan nama file
           ),
         ),
-      ),
-    );
-  }
+        SizedBox(width: 10), // Spasi antar avatar dan teks
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Hi $username",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              "Where Do You Want To Go",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        Expanded(child: SizedBox()), // Membantu menjaga tata letak tetap rapi
+        GestureDetector(
+          onTap: () {
+            print("ini Notif Page");
+          },
+          child: Image.asset(
+            "assets/icons/notification.png",
+            width: 30,
+            height: 30,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
-  Padding _ListExplore() {
+class _ListTrip extends StatelessWidget {
+  final List<ListTrip> trips; // Tambahkan parameter untuk daftar trip
+
+  _ListTrip({required this.trips}); // Constructor untuk menerima data
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      child: SizedBox(
-        height: 180,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: exploreItems.length,
-          itemBuilder: (context, index) {
-            final item = exploreItems[index];
-
-            return Container(
-              width: 360,
-              height: 180,
-              margin: EdgeInsets.only(right: 10), // Jarak antar item
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 3,
-                clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.all(10),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 0.8,
+        ),
+        itemCount: trips.length, // Gunakan daftar trip yang sudah difilter
+        itemBuilder: (context, index) {
+          final trip = trips[index];
+          return GestureDetector(
+            onTap: () {},
+            child: Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Image.asset(item.picturePath, fit: BoxFit.cover),
+                      child: Image.asset(trip.imagePath, fit: BoxFit.fill),
                     ),
-
                     Positioned(
-                      bottom: 10, // Jarak dari bawah
-                      left: 100, // Jarak dari kiri
-                      right: 100, // Jarak dari kanan
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: tdcyan.withOpacity(
-                            0.8,
-                          ), // Tombol semi-transparan
-                          foregroundColor: Colors.black, // Warna teks
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MyProfile(),
+                      height: 100,
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(8),
+                        color: tdwhite.withOpacity(0.1),
+                        child: Column(
+                          children: [
+                            Text(
+                              trip.name,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: tdwhite,
+                              ),
                             ),
-                          );
-                        },
-                        child: Text(
-                          item.buttonText,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                            Text(
+                              trip.daerah,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: tdwhite,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  AppBar _MyAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: tdwhite,
-      elevation: 0,
-      title: Row(
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MyProfile()),
-              );
-            },
-            child: CircleAvatar(
-              radius: 25,
-              backgroundImage: AssetImage(
-                "assets/profile_pic.jpg",
-              ), // Sesuaikan nama file
-            ),
-          ),
-          SizedBox(width: 10), // Spasi antar avatar dan teks
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Hi Ven",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              Text(
-                "Where Do You Want To Go",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          Expanded(child: SizedBox()), // Membantu menjaga tata letak tetap rapi
-          GestureDetector(
-            onTap: () {
-              print("ini Notif Page");
-            },
-            child: Image.asset(
-              "assets/notification.png",
-              width: 30,
-              height: 30,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ListTrip extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: GridView.builder(
-        shrinkWrap: true, // Penting agar GridView tidak error
-        physics:
-            NeverScrollableScrollPhysics(), // Matikan scroll agar hanya Column yang bisa scroll
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // 2 kolom
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 0.8,
-        ),
-        itemCount: ListTrips.length,
-        itemBuilder: (context, index) {
-          final trip = ListTrips[index];
-          return Card(
-            elevation: 3,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(10),
-                    ),
-                    child: Image.asset(trip.imagePath, fit: BoxFit.cover),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Text(
-                    trip.name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
             ),
           );
         },
@@ -302,10 +382,25 @@ class _title_ListTrip extends StatelessWidget {
           padding: const EdgeInsets.only(left: 16),
           child: Text(
             "List Trip",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: tdcyan,
+            ),
           ),
         ),
-        TextButton(onPressed: () {}, child: Text("View All")),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MyNearbyPage()),
+            );
+          },
+          child: Text(
+            "View All",
+            style: TextStyle(fontWeight: FontWeight.w400, color: Colors.black),
+          ),
+        ),
       ],
     );
   }
