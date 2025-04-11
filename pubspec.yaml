@@ -46,12 +46,15 @@ dependencies:
   flutter_facebook_auth: ^7.1.1
 
   table_calendar: ^3.2.0
+  intl: ^0.20.2
 
   flutter_polyline_points: ^2.1.0
   google_maps_flutter: ^2.11.0
   location: ^8.0.0
   flutter_svg: ^2.0.17
   permission_handler: ^11.4.0
+
+  file_picker: ^10.0.0
 
 dev_dependencies:
   flutter_test:

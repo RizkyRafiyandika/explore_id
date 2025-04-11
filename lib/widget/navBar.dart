@@ -56,7 +56,11 @@ class _NavBarState extends State<NavBar> {
                     width: 30,
                     height: 30,
                   ),
-                  Image.asset("assets/icons/person.png", width: 30, height: 30),
+                  CircleAvatar(
+                    radius: 15,
+                    backgroundColor: tdwhite,
+                    backgroundImage: AssetImage("assets/profile_pic.jpg"),
+                  ),
                 ],
                 onTap: (index) {
                   setState(() {

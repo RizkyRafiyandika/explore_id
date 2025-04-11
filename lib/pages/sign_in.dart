@@ -1,4 +1,3 @@
-import 'package:explore_id/pages/home.dart';
 import 'package:explore_id/pages/sign_up.dart';
 import 'package:explore_id/pages/welcome.dart';
 import 'package:explore_id/services/auth_firebase.dart';
@@ -32,6 +31,8 @@ class _MyLoginState extends State<MyLogin> {
     String password = _passwordController.text.trim();
 
     User? user = await _auth.signInWithEmailAndPass(email, password);
+
+    if (!mounted) return;
 
     if (user != null) {
       ScaffoldMessenger.of(
@@ -276,10 +277,12 @@ class _MyLoginState extends State<MyLogin> {
                 ElevatedButton(
                   onPressed: () {
                     signIn();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MyHome()),
-                    );
+                    if (mounted) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => NavBar()),
+                      );
+                    }
                     //input logic login
                   },
                   style: ElevatedButton.styleFrom(
