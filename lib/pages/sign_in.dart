@@ -1,4 +1,3 @@
-import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/pages/sign_up.dart';
 import 'package:explore_id/pages/welcome.dart';
 import 'package:explore_id/services/auth_firebase.dart';
