@@ -45,7 +45,7 @@ class _MySignUpState extends State<MySignUp> {
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MyLogin()),
+        MaterialPageRoute(builder: (context) => MySignIn()),
       );
     } else {
       ScaffoldMessenger.of(
@@ -74,7 +74,7 @@ class _MySignUpState extends State<MySignUp> {
           onPressed:
               () => Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => MyLogin()),
+                MaterialPageRoute(builder: (_) => MySignIn()),
               ),
         ),
       ),

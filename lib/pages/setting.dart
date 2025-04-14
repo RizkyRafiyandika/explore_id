@@ -1,5 +1,4 @@
 import 'package:explore_id/pages/sign_in.dart';
-import 'package:explore_id/pages/sign_up.dart';
 import 'package:explore_id/services/auth_firebase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -84,7 +83,7 @@ class MySettingPage extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MySignUp(),
+                        builder: (context) => MySignIn(),
                       ), // 🛠 Ubah ke MySignIn()
                     );
                   },
@@ -102,7 +101,7 @@ class MySettingPage extends StatelessWidget {
                           await _auth.signOut();
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (context) => MyLogin()),
+                            MaterialPageRoute(builder: (context) => MySignIn()),
                             (route) => false,
                           );
                         },

@@ -1,5 +1,4 @@
 import 'package:explore_id/models/listPlace.dart';
-import 'package:explore_id/pages/detailPlace.dart';
 import 'package:explore_id/widget/filterButton.dart';
 import 'package:flutter/material.dart';
 
@@ -67,10 +66,10 @@ class _MyNearbyPageState extends State<MyNearbyPage> {
                 final restaurant = restaurants[index];
                 return GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (e) => MydetailPlace()),
-                    );
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (e) => MyDetailPlace(trip:trip)),
+                    // );
                   },
                   child: Card(
                     elevation: 3,

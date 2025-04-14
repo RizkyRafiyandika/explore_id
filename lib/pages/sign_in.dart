@@ -1,4 +1,4 @@
-import 'package:explore_id/pages/home.dart';
+import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/pages/sign_up.dart';
 import 'package:explore_id/pages/welcome.dart';
 import 'package:explore_id/services/auth_firebase.dart';
@@ -6,14 +6,14 @@ import 'package:explore_id/widget/navBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class MyLogin extends StatefulWidget {
-  const MyLogin({super.key});
+class MySignIn extends StatefulWidget {
+  const MySignIn({super.key});
 
   @override
-  State<MyLogin> createState() => _MyLoginState();
+  State<MySignIn> createState() => _MySignInState();
 }
 
-class _MyLoginState extends State<MyLogin> {
+class _MySignInState extends State<MySignIn> {
   bool isChecked = false;
 
   final FirebaseAuthService _auth = FirebaseAuthService();
@@ -32,6 +32,8 @@ class _MyLoginState extends State<MyLogin> {
     String password = _passwordController.text.trim();
 
     User? user = await _auth.signInWithEmailAndPass(email, password);
+
+    if (!mounted) return;
 
     if (user != null) {
       ScaffoldMessenger.of(
@@ -68,7 +70,7 @@ class _MyLoginState extends State<MyLogin> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white, size: 30),
           onPressed: () {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => WelcomePage()),
             );
@@ -140,7 +142,7 @@ class _MyLoginState extends State<MyLogin> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => MyLogin(),
+                                builder: (context) => MySignIn(),
                               ),
                             );
                           },
@@ -276,10 +278,12 @@ class _MyLoginState extends State<MyLogin> {
                 ElevatedButton(
                   onPressed: () {
                     signIn();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MyHome()),
-                    );
+                    if (mounted) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => NavBar()),
+                      );
+                    }
                     //input logic login
                   },
                   style: ElevatedButton.styleFrom(
@@ -414,36 +418,75 @@ class _MyLoginState extends State<MyLogin> {
                     ],
                   ),
                 ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center, // Pusatkan teks di tengah
+                Column(
                   children: [
                     Text(
                       "Don't have an account?",
                       style: TextStyle(fontSize: 15, color: Colors.white),
                     ),
-                    SizedBox(width: 5), // Beri sedikit jarak
-                    GestureDetector(
-                      onTap: () {
-                        // Pindah ke halaman register
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MySignUp(),
-                          ), // Ganti dengan halaman tujuan
-                        );
-                      },
-                      child: Text(
-                        "Create Account",
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.blue,
-                          fontWeight:
-                              FontWeight
-                                  .bold, // Bisa ditambahkan biar lebih menonjol
+                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MySignUp(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            "Create Account",
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
                         ),
-                      ),
+
+                        // Vertical Divider as separator
+                        Container(
+                          margin: EdgeInsets.symmetric(horizontal: 10),
+                          height: 20,
+                          width: 1,
+                          color: Colors.white54,
+                        ),
+
+                        GestureDetector(
+                          onTap: () async {
+                            try {
+                              UserCredential userCredential =
+                                  await FirebaseAuth.instance
+                                      .signInAnonymously();
+                              print(
+                                "Login as guest: ${userCredential.user?.uid}",
+                              );
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => NavBar(),
+                                ),
+                              );
+                            } catch (e) {
+                              print("Error login as guest: $e");
+                            }
+                          },
+                          child: Text(
+                            "Continue as Guest",
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.blue,
+                              fontWeight: FontWeight.w800,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
