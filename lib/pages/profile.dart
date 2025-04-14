@@ -1,6 +1,7 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/pages/setting.dart';
 import 'package:explore_id/provider/userProvider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +16,13 @@ class _MyProfileState extends State<MyProfile> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<MyUserProvider>(context);
+    final user = FirebaseAuth.instance.currentUser;
+
+    final displayUsername =
+        (user == null || user.isAnonymous) ? "Guest" : userProvider.username;
+
+    final displayEmail =
+        (user == null || user.isAnonymous) ? "No email" : userProvider.email;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,11 +77,11 @@ class _MyProfileState extends State<MyProfile> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    userProvider.username, // Menampilkan username
+                    displayUsername, // Menampilkan username
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    userProvider.email, // Menampilkan email
+                    displayEmail, // Menampilkan email
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],

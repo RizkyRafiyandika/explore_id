@@ -8,6 +8,7 @@ import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/selectCategory.dart';
 import 'package:explore_id/provider/userProvider.dart';
 import 'package:explore_id/widget/listTripCard.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -66,17 +67,22 @@ class _MyHomeState extends State<MyHome> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<MyUserProvider>(context);
+    final user = FirebaseAuth.instance.currentUser;
+
+    // Cek apakah user tidak login atau login anonim
+    final displayUsername =
+        (user == null || user.isAnonymous) ? "Guest" : userProvider.username;
 
     return Scaffold(
       extendBody: true,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(80),
-        child: _MyAppBar(context, userProvider.username),
+        child: _MyAppBar(context, displayUsername),
       ),
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
         child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(), // penting untuk memicu pull
+          physics: AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
               _ListExplore(),
