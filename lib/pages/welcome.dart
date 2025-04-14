@@ -1,4 +1,3 @@
-import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/widget/navBar.dart';
 import 'package:flutter/material.dart';
 
@@ -61,7 +60,7 @@ class _WelcomePageState extends State<WelcomePage> {
             child: Transform.translate(
               offset: Offset(0, -200),
               child: Text(
-                'Optimal Travel\nMaximum Experie  nce!',
+                'Optimal Travel\nMaximum Experience!',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 35,

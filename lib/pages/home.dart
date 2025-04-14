@@ -5,7 +5,10 @@ import 'package:explore_id/models/explore.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
+import 'package:explore_id/pages/selectCategory.dart';
 import 'package:explore_id/provider/userProvider.dart';
+import 'package:explore_id/widget/listTripCard.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -47,6 +50,14 @@ class _MyHomeState extends State<MyHome> {
     }
   }
 
+  Future<void> _handleRefresh() async {
+    await Future.delayed(Duration(seconds: 1)); // contoh delay
+    // TODO: Panggil ulang API atau setState() untuk reload data
+    setState(() {
+      // contoh: kamu bisa re-fetch data trip di sini
+    });
+  }
+
   @override
   void dispose() {
     searchController.dispose();
@@ -56,23 +67,33 @@ class _MyHomeState extends State<MyHome> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<MyUserProvider>(context);
+    final user = FirebaseAuth.instance.currentUser;
+
+    // Cek apakah user tidak login atau login anonim
+    final displayUsername =
+        (user == null || user.isAnonymous) ? "Guest" : userProvider.username;
+
     return Scaffold(
       extendBody: true,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(80),
-        child: _MyAppBar(context, userProvider.username),
+        child: _MyAppBar(context, displayUsername),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _ListExplore(),
-            _SearchBar(searchController),
-            SizedBox(height: 16),
-            _ListCategory(),
-            _title_ListTrip(),
-            _ListTrip(trips: filteredTrips),
-            SizedBox(height: 50),
-          ],
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              _ListExplore(),
+              _SearchBar(searchController),
+              SizedBox(height: 16),
+              _ListCategory(),
+              _title_ListTrip(),
+              ListTripWidget(trips: filteredTrips),
+              SizedBox(height: 50),
+            ],
+          ),
         ),
       ),
     );
@@ -93,7 +114,11 @@ Padding _ListCategory() {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => MyProfile()),
+                MaterialPageRoute(
+                  builder:
+                      (context) =>
+                          MySelectCategory(categoryName: category.name),
+                ),
               );
             },
             child: Column(
@@ -288,88 +313,6 @@ AppBar _MyAppBar(BuildContext context, String username) {
       ],
     ),
   );
-}
-
-class _ListTrip extends StatelessWidget {
-  final List<ListTrip> trips; // Tambahkan parameter untuk daftar trip
-
-  _ListTrip({required this.trips}); // Constructor untuk menerima data
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 0.8,
-        ),
-        itemCount: trips.length, // Gunakan daftar trip yang sudah difilter
-        itemBuilder: (context, index) {
-          final trip = trips[index];
-          return GestureDetector(
-            onTap: () {},
-            child: Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Image.asset(trip.imagePath, fit: BoxFit.fill),
-                    ),
-                    Positioned(
-                      height: 100,
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: EdgeInsets.all(8),
-                        color: tdwhite.withOpacity(0.1),
-                        child: Column(
-                          children: [
-                            Text(
-                              trip.name,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: tdwhite,
-                              ),
-                            ),
-                            Text(
-                              trip.daerah,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                color: tdwhite,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
 }
 
 class _title_ListTrip extends StatelessWidget {
