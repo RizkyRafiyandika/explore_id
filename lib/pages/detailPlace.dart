@@ -1,6 +1,5 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/listTrip.dart';
-import 'package:explore_id/widget/TcCustomeCurve.dart';
 import 'package:explore_id/widget/popUpAdd.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -35,9 +34,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
       maxLines: maxLines,
       textDirection: TextDirection.ltr,
     );
-    tp.layout(
-      maxWidth: MediaQuery.of(context).size.width - 32,
-    ); // padding horizontal
+    tp.layout(maxWidth: MediaQuery.of(context).size.width - 32);
 
     setState(() {
       _isTextOverflow = tp.didExceedMaxLines;
@@ -46,29 +43,30 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
 
   @override
   Widget build(BuildContext context) {
-    double oneThirdScreenHeight = MediaQuery.of(context).size.height / 2;
+    double imageHeight = MediaQuery.of(context).size.height / 2.5;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // Image header with rounded bottom
             Stack(
-              clipBehavior: Clip.none,
               children: [
-                ClipPath(
-                  clipper: Tccustomecurve(),
-                  child: SizedBox(
-                    height: oneThirdScreenHeight,
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
+                  child: Image.asset(
+                    widget.trip.imagePath,
+                    height: imageHeight,
                     width: double.infinity,
-                    child: Image.asset(
-                      widget.trip.imagePath,
-                      fit: BoxFit.cover,
-                    ),
+                    fit: BoxFit.cover,
                   ),
                 ),
 
-                // Header Buttons
+                // Back & Menu buttons
                 Positioned(
                   top: 40,
                   left: 16,
@@ -76,157 +74,104 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // TODO: menu logic
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.menu, color: Colors.black),
-                        ),
-                      ),
+                      _buildCircleButton(Icons.arrow_back, () {
+                        Navigator.pop(context);
+                      }),
+                      _buildCircleButton(Icons.menu, () {
+                        // TODO: menu action
+                      }),
                     ],
-                  ),
-                ),
-
-                // Location Text in image
-                Positioned(
-                  bottom: 80,
-                  left: 20,
-                  right: 20, // Added right padding to prevent overflow
-                  child: Flexible(
-                    child: Text(
-                      widget.trip.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Like Button
-                Positioned(
-                  bottom: 0,
-                  right: 50,
-                  child: Material(
-                    elevation: 8,
-                    shape: const CircleBorder(),
-                    shadowColor: Colors.black.withOpacity(0.4),
-                    color: Colors.white,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: () {
-                        // TODO: toggle like logic
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: Icon(
-                          Icons.favorite_border,
-                          color: Colors.redAccent,
-                          size: 28,
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 48),
+            const SizedBox(height: 20),
 
-            // Detail content
+            // Title + Label
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.trip.name,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tdorange.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      widget.trip.label,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.deepOrange,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Location info
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  Icon(Icons.location_on, color: tdcyan, size: 28),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.trip.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Description card
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title & Label
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.location_on, color: tdcyan, size: 36),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Location",
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  Text(
-                                    widget.trip.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: tdorange.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          "Label: ${widget.trip.label}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.deepOrange,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    "Description",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-
-                  const SizedBox(height: 16),
-
+                  const SizedBox(height: 8),
                   Text(
                     widget.trip.desk,
                     textAlign: TextAlign.justify,
@@ -250,38 +195,53 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                         style: const TextStyle(color: Colors.deepOrange),
                       ),
                     ),
-
-                  const SizedBox(height: 20),
-
-                  // Button
-                  Center(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: tdcyan.withOpacity(0.8),
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () {
-                        final userId = FirebaseAuth.instance.currentUser!.uid;
-                        final trip = widget.trip;
-                        showAddDestinationDialog(context, userId, trip);
-                      },
-                      child: const Text(
-                        "Add to destination",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 32),
+
+            // Add Button
+            Center(
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.add_location_alt_outlined),
+                label: const Text("Add to Destination"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: tdcyan,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () {
+                  final userId = FirebaseAuth.instance.currentUser!.uid;
+                  final trip = widget.trip;
+                  showAddDestinationDialog(context, userId, trip);
+                },
+              ),
+            ),
+
+            const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.black),
       ),
     );
   }
