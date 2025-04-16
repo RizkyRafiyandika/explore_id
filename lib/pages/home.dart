@@ -1,5 +1,4 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/category.dart';
 import 'package:explore_id/models/explore.dart';
 import 'package:explore_id/models/listTrip.dart';
@@ -86,8 +85,9 @@ class _MyHomeState extends State<MyHome> {
           child: Column(
             children: [
               _ListExplore(),
+              SizedBox(height: 15),
               _SearchBar(searchController),
-              SizedBox(height: 16),
+              SizedBox(height: 20),
               _ListCategory(),
               _title_ListTrip(),
               ListTripWidget(trips: filteredTrips),
@@ -100,54 +100,148 @@ class _MyHomeState extends State<MyHome> {
   }
 }
 
-Padding _ListCategory() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 10),
-    child: SizedBox(
-      height: 120, // Tinggi ListView
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal, // **ListView Horizontal**
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) =>
-                          MySelectCategory(categoryName: category.name),
+Widget _ListCategory() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Text(
+          "Category",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+      ),
+      const SizedBox(height: 10),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: categories.length,
+            itemBuilder: (context, index) {
+              final category = categories[index];
+              final isMore = category.imagePath.isEmpty;
+              return GestureDetector(
+                onTap: () {
+                  if (isMore) {
+                    // Tampilkan dialog kategori lainnya
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("More Categories"),
+                          content: SizedBox(
+                            width: double.maxFinite,
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              itemCount: moreCategories.length,
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
+                                  ),
+                              itemBuilder: (context, index) {
+                                final item = moreCategories[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context); // Tutup dialog
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => MySelectCategory(
+                                              categoryName: item.name,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundColor: Colors.blue.shade50,
+                                        radius: 25,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(6),
+                                          child: Image.asset(
+                                            item.imagePath,
+                                            width: 30,
+                                            height: 30,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        item.name,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("Close"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else {
+                    // Navigasi langsung ke kategori
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                MySelectCategory(categoryName: category.name),
+                      ),
+                    );
+                  }
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child:
+                            isMore
+                                ? const Icon(
+                                  Icons.grid_view,
+                                  size: 30,
+                                  color: Colors.blue,
+                                )
+                                : Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: Image.asset(
+                                    category.imagePath,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(category.name, style: const TextStyle(fontSize: 12)),
+                  ],
                 ),
               );
             },
-            child: Column(
-              children: [
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 8),
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle, // **Membuat gambar bulat**
-                    image: DecorationImage(
-                      image: AssetImage(
-                        category.imagePath,
-                      ), // **Gambar dari assets**
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  category.name,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          );
-        },
+          ),
+        ),
       ),
-    ),
+    ],
   );
 }
 
@@ -384,14 +478,10 @@ class _title_ListTrip extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 16),
+          padding: const EdgeInsets.only(left: 20),
           child: Text(
             "List Trip",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: tdcyan,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
         TextButton(
