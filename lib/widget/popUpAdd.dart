@@ -54,6 +54,7 @@ void showAddDestinationDialog(
             String title = titleController.text.trim();
             String desc = deskController.text.trim();
             String place = trip.name; // ✅ Diambil langsung dari trip
+            String label = trip.label; // ✅ Diambil langsung dari trip
 
             print("📝 Title: $title");
             print("🗒️ Description: $desc");
@@ -61,6 +62,7 @@ void showAddDestinationDialog(
             print("📅 Date: ${selectedDate?.toIso8601String()}");
             print("⏰ Start Time: ${startTime?.format(context)}");
             print("⏰ End Time: ${endTime?.format(context)}");
+            print("Label: $label");
 
             print("UID: $userId");
 
@@ -90,6 +92,7 @@ void showAddDestinationDialog(
                       start: startTime!.format(context),
                       end: endTime!.format(context),
                       place: place,
+                      label: label,
                     ),
                   ],
                 )

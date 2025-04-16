@@ -30,7 +30,9 @@ class ListTripWidget extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (e) => MyDetailPlace(trip: trip)),
+                MaterialPageRoute(
+                  builder: (e) => MyDetailPlace(trip: trip),
+                ),
               );
             },
             child: Card(

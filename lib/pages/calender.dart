@@ -41,6 +41,7 @@ class _MyCalendarState extends State<MyCalendar> {
               start: data['start'],
               end: data['end'],
               place: data['place'],
+              label: data['label'], 
             );
           }).toList();
 

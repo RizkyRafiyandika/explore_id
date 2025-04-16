@@ -6,6 +6,7 @@ import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/selectCategory.dart';
+import 'package:explore_id/pages/setting.dart';
 import 'package:explore_id/provider/userProvider.dart';
 import 'package:explore_id/widget/listTripCard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -347,6 +348,10 @@ AppBar _MyAppBar(BuildContext context, String username) {
         GestureDetector(
           onTap: () {
             print("Notifikasi dibuka");
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MySettingPage()),
+            );
           },
           child: Stack(
             children: [
