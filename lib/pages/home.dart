@@ -1,11 +1,13 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/category.dart';
 import 'package:explore_id/models/explore.dart';
 import 'package:explore_id/models/listTrip.dart';
+import 'package:explore_id/pages/likes.dart';
 import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/selectCategory.dart';
-import 'package:explore_id/pages/setting.dart';
+import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/provider/userProvider.dart';
 import 'package:explore_id/widget/listTripCard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -77,7 +79,7 @@ class _MyHomeState extends State<MyHome> {
       extendBody: true,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(80),
-        child: _MyAppBar(context, displayUsername),
+        child: _MyAppBar(context, displayUsername, user),
       ),
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
@@ -391,7 +393,7 @@ Padding _ListExplore() {
   );
 }
 
-AppBar _MyAppBar(BuildContext context, String username) {
+AppBar _MyAppBar(BuildContext context, String username, User? user) {
   return AppBar(
     backgroundColor: Colors.transparent,
     elevation: 0,
@@ -399,10 +401,16 @@ AppBar _MyAppBar(BuildContext context, String username) {
       children: [
         GestureDetector(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MyProfile()),
-            );
+            if (user == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Silakan login untuk melihat profil.")),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyProfile()),
+              );
+            }
           },
           child: Container(
             width: 40,
@@ -439,38 +447,49 @@ AppBar _MyAppBar(BuildContext context, String username) {
           ],
         ),
         Spacer(),
-        GestureDetector(
-          onTap: () {
-            print("Notifikasi dibuka");
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MySettingPage()),
-            );
-          },
-          child: Stack(
-            children: [
-              Image.asset(
-                "assets/icons/notification.png",
-                width: 30,
-                height: 30,
+        user == null
+            ? GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MySignIn()),
+                );
+              },
+              child: Text(
+                "Login",
+                style: TextStyle(color: tdcyan, fontWeight: FontWeight.w500),
               ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  //ganti container karena Class Circle avatar tidak memiliki widht dan height
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1.5),
+            )
+            : GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyLikesPage()),
+                );
+              },
+              child: Stack(
+                children: [
+                  Icon(
+                    Icons.favorite_border,
+                    weight: 30,
+                    color: Colors.black.withOpacity(0.6),
                   ),
-                ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
       ],
     ),
   );

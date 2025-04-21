@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/listTrip.dart';
+import 'package:explore_id/services/likes_Service.dart';
 import 'package:explore_id/widget/popUpAdd.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +40,21 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
 
     setState(() {
       _isTextOverflow = tp.didExceedMaxLines;
+    });
+  }
+
+  bool _isLiked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLikeStatus();
+  }
+
+  void _loadLikeStatus() async {
+    bool isLiked = await isTripLiked(widget.trip.id);
+    setState(() {
+      _isLiked = isLiked;
     });
   }
 
@@ -81,6 +98,38 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                         // TODO: menu action
                       }),
                     ],
+                  ),
+                ),
+                Positioned(
+                  top: 225,
+                  right: 20,
+                  child: StatefulBuilder(
+                    builder:
+                        (context, setState) => Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.4),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              _isLiked ? Icons.favorite : Icons.favorite_border,
+                              color:
+                                  _isLiked
+                                      ? Colors.red
+                                      : Colors.black.withOpacity(0.5),
+                            ),
+                            onPressed: () async {
+                              if (_isLiked) {
+                                await unlikeTrip(widget.trip.id, context);
+                              } else {
+                                await likeTrip(widget.trip.id);
+                              }
+                              setState(() {
+                                _isLiked = !_isLiked;
+                              });
+                            },
+                          ),
+                        ),
                   ),
                 ),
               ],

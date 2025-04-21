@@ -28,7 +28,7 @@ class _NavBarState extends State<NavBar> {
 
   void _onItemTapped(int index) {
     // Cek jika user menuju halaman Plan (index 1) atau Calendar (index 2)
-    if (index == 1 || index == 2) {
+    if (index == 1 || index == 2 || index == 3) {
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null || user.isAnonymous) {
         _showLoginAlert();
