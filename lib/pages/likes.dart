@@ -79,7 +79,13 @@ class _MyLikesPageState extends State<MyLikesPage> {
                 : ListView.builder(
                   itemCount: likedTrips.length,
                   itemBuilder: (context, index) {
-                    return TripCardGridItem(trip: likedTrips[index]);
+                    return TripCardGridItem(
+                      trip: likedTrips[index],
+                      onLikeChanged: () {
+                        // Callback untuk memperbarui tampilan jika diperlukan
+                        fetchLikedTrips();
+                      },
+                    );
                   },
                 ),
       ),

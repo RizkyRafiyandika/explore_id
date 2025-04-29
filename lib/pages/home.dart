@@ -1,7 +1,5 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/category.dart';
-import 'package:explore_id/models/explore.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/pages/likes.dart';
 import 'package:explore_id/pages/nearby_List_Page.dart';
@@ -9,6 +7,8 @@ import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/selectCategory.dart';
 import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/provider/userProvider.dart';
+import 'package:explore_id/widget/carousel.dart';
+import 'package:explore_id/widget/customeToast.dart';
 import 'package:explore_id/widget/listTripCard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -54,9 +54,9 @@ class _MyHomeState extends State<MyHome> {
 
   Future<void> _handleRefresh() async {
     await Future.delayed(Duration(seconds: 1)); // contoh delay
-    // TODO: Panggil ulang API atau setState() untuk reload data
+    // Panggil ulang API atau setState() untuk reload data
     setState(() {
-      // contoh: kamu bisa re-fetch data trip di sini
+      filteredTrips = ListTrips; // Refresh data trip dengan data terbaru
     });
   }
 
@@ -87,13 +87,29 @@ class _MyHomeState extends State<MyHome> {
           physics: AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              _ListExplore(),
-              SizedBox(height: 15),
+              ListExplore(),
               _SearchBar(searchController),
               SizedBox(height: 20),
               _ListCategory(),
               _title_ListTrip(),
-              ListTripWidget(trips: filteredTrips),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: filteredTrips.length,
+                itemBuilder: (context, index) {
+                  return TripCardGridItem(
+                    trip: filteredTrips[index],
+                    onLikeChanged: () {
+                      setState(() {}); // Trigger refresh parent if needed
+                    },
+                  );
+                },
+              ),
               SizedBox(height: 50),
             ],
           ),
@@ -306,93 +322,6 @@ Container _SearchBar(searchController) {
   );
 }
 
-Padding _ListExplore() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0), // kiri-kanan 16
-    child: CarouselSlider(
-      options: CarouselOptions(
-        //buat atur besar penempatan carousel
-        height: 180,
-        autoPlay: true,
-        enlargeCenterPage: true,
-        viewportFraction: 0.85,
-      ),
-      items:
-          carouselItem.map((item) {
-            //manggil carousel item seperti title subtitle dan image
-            return Builder(
-              builder: (BuildContext context) {
-                return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    image: DecorationImage(
-                      image: AssetImage(item['image']!),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.black.withOpacity(0.6),
-                              Colors.transparent,
-                            ],
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              item['title']!,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                            Text(
-                              item['subtitle']!,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.blueAccent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                padding: EdgeInsets.symmetric(horizontal: 16),
-                              ),
-                              onPressed: () {},
-                              child: Text('Explore Now'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          }).toList(),
-    ),
-  );
-}
-
 AppBar _MyAppBar(BuildContext context, String username, User? user) {
   return AppBar(
     backgroundColor: Colors.transparent,
@@ -510,10 +439,17 @@ class _title_ListTrip extends StatelessWidget {
         ),
         TextButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MyNearbyPage()),
-            );
+            final user = FirebaseAuth.instance.currentUser;
+            if (user == null) {
+              customToast(
+                "Silahkan login terlebih dahulu untuk melihat semua trip",
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MyNearbyPage()),
+              );
+            }
           },
           child: Text(
             "View All",

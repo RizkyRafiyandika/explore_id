@@ -1,61 +1,55 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:explore_id/widget/customeToast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 
 Future<void> likeTrip(String placeId) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return;
 
-  final likesRef = FirebaseFirestore.instance.collection('likes');
+  final likeDocId = '${user.uid}_$placeId';
+  final likeRef = FirebaseFirestore.instance.collection('likes').doc(likeDocId);
 
-  // Cek apakah user sudah like tempat ini
-  final snapshot =
-      await likesRef
-          .where('userId', isEqualTo: user.uid)
-          .where('placeId', isEqualTo: placeId)
-          .get();
-
-  if (snapshot.docs.isEmpty) {
-    // Kalau belum like, tambahkan like
-    await likesRef.add({
+  final docSnapshot = await likeRef.get();
+  if (!docSnapshot.exists) {
+    await likeRef.set({
       'userId': user.uid,
       'placeId': placeId,
       'timestamp': FieldValue.serverTimestamp(),
     });
-    customToast("Berhasil Menambakahan Tempat ke daftar suka");
+    customToast("Berhasil menambahkan tempat ke daftar suka");
   }
 }
 
-Future<void> unlikeTrip(String placeId, BuildContext context) async {
+Future<void> unlikeTrip(String placeId) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return;
 
-  final likesRef = FirebaseFirestore.instance.collection('likes');
+  final likeDocId = '${user.uid}_$placeId';
+  final likeRef = FirebaseFirestore.instance.collection('likes').doc(likeDocId);
 
-  final snapshot =
-      await likesRef
-          .where('userId', isEqualTo: user.uid)
-          .where('placeId', isEqualTo: placeId)
-          .get();
-
-  for (var doc in snapshot.docs) {
-    await doc.reference.delete(); // hapus like yang ditemukan
+  final docSnapshot = await likeRef.get();
+  if (docSnapshot.exists) {
+    await likeRef.delete();
+    customToast("Berhasil menghapus trip dari daftar suka");
   }
-  // Tampilkan notifikasi bahwa unlike berhasil
-  customToast("Berhasil menghapus trip dari daftar suka");
 }
 
 Future<bool> isTripLiked(String placeId) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return false;
 
-  final snapshot =
-      await FirebaseFirestore.instance
-          .collection('likes')
-          .where('userId', isEqualTo: user.uid)
-          .where('placeId', isEqualTo: placeId)
-          .get();
+  final likeDocId = '${user.uid}_$placeId';
+  final likeRef = FirebaseFirestore.instance.collection('likes').doc(likeDocId);
 
-  return snapshot.docs.isNotEmpty;
+  final docSnapshot = await likeRef.get();
+  return docSnapshot.exists;
+}
+
+Future<int> getTotalLikesForTrip(String placeId) async {
+  final snapshot = await FirebaseFirestore.instance
+      .collection('likes')
+      .where('placeId', isEqualTo: placeId)
+      .get();
+
+  return snapshot.size;
 }

@@ -1,10 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/services/likes_Service.dart';
 import 'package:explore_id/widget/popUpAdd.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MyDetailPlace extends StatefulWidget {
   final ListTrip trip;
@@ -49,6 +49,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
   void initState() {
     super.initState();
     _loadLikeStatus();
+    _loadTotalLikes();
   }
 
   void _loadLikeStatus() async {
@@ -56,6 +57,119 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
     setState(() {
       _isLiked = isLiked;
     });
+  }
+
+  int _totalLikes = 0;
+
+  void _loadTotalLikes() async {
+    int totalLikes = await getTotalLikesForTrip(widget.trip.id);
+    setState(() {
+      _totalLikes = totalLikes;
+    });
+  }
+
+  // Panggil fungsi ini saat tombol ditekan
+  void showLocationDialog(
+    BuildContext context,
+    double latitude,
+    double longitude,
+    String title,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12), // Rounded corners
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 255, 255, 255),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: EdgeInsets.all(16),
+
+            height: 500, // Total height for dialog
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Title Text
+                Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: tdwhiteblue, // Background color with opacity
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(
+                        4,
+                      ), // Padding inside the circle
+                      child: Icon(Icons.location_on, color: tdwhite, size: 24),
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: tdwhiteblue,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                // Map Container with fixed height for map
+                ClipOval(
+                  child: SizedBox(
+                    height: 300, // Set map height here
+                    width: 300, // Set map width here to make it a circle
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(latitude, longitude),
+                        zoom: 14,
+                      ),
+                      markers: {
+                        Marker(
+                          markerId: MarkerId('locationMarker'),
+                          position: LatLng(latitude, longitude),
+                          infoWindow: InfoWindow(title: title),
+                        ),
+                      },
+                      zoomControlsEnabled: false, // Disable zoom controls
+                      zoomGesturesEnabled: false, // Disable zoom gestures
+                    ),
+                  ),
+                ),
+                SizedBox(height: 8),
+                // Close Button
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: tdcyan,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.exit_to_app_outlined, size: 18),
+                      SizedBox(width: 4),
+                      Text('Close'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -94,8 +208,13 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                       _buildCircleButton(Icons.arrow_back, () {
                         Navigator.pop(context);
                       }),
-                      _buildCircleButton(Icons.menu, () {
-                        // TODO: menu action
+                      _buildCircleButton(Icons.location_searching_outlined, () {
+                        showLocationDialog(
+                          context,
+                          widget.trip.latitude, // <- dari data
+                          widget.trip.longitude, // <- dari data
+                          widget.trip.name, // <- nama tempat
+                        );
                       }),
                     ],
                   ),
@@ -120,13 +239,14 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                             ),
                             onPressed: () async {
                               if (_isLiked) {
-                                await unlikeTrip(widget.trip.id, context);
+                                await unlikeTrip(widget.trip.id);
                               } else {
                                 await likeTrip(widget.trip.id);
                               }
                               setState(() {
                                 _isLiked = !_isLiked;
                               });
+                              _loadTotalLikes();
                             },
                           ),
                         ),
@@ -145,14 +265,28 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(
-                      widget.trip.name,
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.trip.name,
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$_totalLikes likes',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+
                   const SizedBox(width: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(
