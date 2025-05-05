@@ -15,6 +15,7 @@ Future<void> addEvents({
         "start": e.start,
         "end": e.end,
         "place": e.place,
+        "label": e.label, // tambahkan label jika ada
       });
     }
   } catch (e) {
@@ -50,6 +51,7 @@ Future<List<Event>> getEventsForDate({
         start: data["start"],
         end: data["end"],
         place: data["place"],
+        label: data["label"], // tambahkan label jika ada
       );
     }).toList();
   } catch (e) {

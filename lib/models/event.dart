@@ -5,6 +5,7 @@ class Event {
   final String start;
   final String end;
   final String place;
+  final String label;
 
   Event({
     required this.title,
@@ -13,6 +14,7 @@ class Event {
     required this.start,
     required this.end,
     required this.place,
+    required this.label,
   });
 }
 

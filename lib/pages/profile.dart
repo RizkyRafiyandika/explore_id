@@ -1,6 +1,10 @@
 import 'package:explore_id/colors/color.dart';
+import 'package:explore_id/models/dataChartTrip.dart';
 import 'package:explore_id/pages/setting.dart';
 import 'package:explore_id/provider/userProvider.dart';
+import 'package:explore_id/widget/Indicator.dart';
+import 'package:explore_id/widget/cartContoller.dart';
+import 'package:explore_id/widget/pie_chart.dart'; // pastikan getSections() berasal dari sini
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +16,25 @@ class MyProfile extends StatefulWidget {
   State<MyProfile> createState() => _MyProfileState();
 }
 
-class _MyProfileState extends State<MyProfile> {
+class _MyProfileState extends State<MyProfile>
+    with SingleTickerProviderStateMixin {
+  late int touchIndex = -1;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      generateChartData(currentUser.uid).then((_) {
+        setState(() {
+          isLoading = false;
+        });
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<MyUserProvider>(context);
@@ -27,11 +49,11 @@ class _MyProfileState extends State<MyProfile> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: tdcyan,
-        title: Text("Profile", style: TextStyle(color: Colors.white)),
+        title: const Text("Profile", style: TextStyle(color: Colors.white)),
         centerTitle: false,
         actions: [
           IconButton(
-            icon: Icon(Icons.settings, color: Colors.white),
+            icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -43,7 +65,7 @@ class _MyProfileState extends State<MyProfile> {
       ),
       body: Stack(
         children: [
-          // Bagian atas dengan warna berbeda
+          // Bagian atas
           Positioned(
             top: 0,
             left: 0,
@@ -52,7 +74,7 @@ class _MyProfileState extends State<MyProfile> {
             child: Container(color: tdcyan),
           ),
 
-          // Lengkungan pemisah ke atas
+          // Lengkungan pemisah
           Positioned(
             top: MediaQuery.of(context).size.height / 9 - 70,
             left: 0,
@@ -63,7 +85,7 @@ class _MyProfileState extends State<MyProfile> {
             ),
           ),
 
-          // Konten di bawah lengkungan
+          // Konten profil
           Padding(
             padding: EdgeInsets.only(
               top: MediaQuery.of(context).size.height / 20,
@@ -71,22 +93,42 @@ class _MyProfileState extends State<MyProfile> {
             child: Center(
               child: Column(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 50,
                     backgroundImage: AssetImage('assets/profile_pic.jpg'),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    displayUsername, // Menampilkan username
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    displayUsername,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
-                    displayEmail, // Menampilkan email
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    displayEmail,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],
               ),
             ),
+          ),
+
+          // Pie Chart
+          Expanded(
+            child:
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : chartData.isEmpty
+                    ? const Center(child: Text("Belum ada data perjalanan."))
+                    : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 20),
+                        AnimatedPieChart(getSections: getSections),
+                        const MyIndicatorWidget(),
+                      ],
+                    ),
           ),
         ],
       ),
@@ -94,7 +136,7 @@ class _MyProfileState extends State<MyProfile> {
   }
 }
 
-// Clipper untuk lengkungan ke atas
+// Clipper untuk efek gelombang ke atas
 class WaveClipperUp extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

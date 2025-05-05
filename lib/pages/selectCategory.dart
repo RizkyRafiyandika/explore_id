@@ -35,8 +35,22 @@ class _MySelectCategoryState extends State<MySelectCategory> {
       body:
           filteredTrips.isEmpty
               ? Center(child: Text("Tidak ada trip di kategori ini."))
-              : SingleChildScrollView(
-                child: ListTripWidget(trips: filteredTrips),
+              : GridView.builder(
+                padding: const EdgeInsets.all(8.0),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8.0,
+                  mainAxisSpacing: 8.0,
+                ),
+                itemCount: filteredTrips.length,
+                itemBuilder: (context, index) {
+                  return TripCardGridItem(
+                    trip: filteredTrips[index],
+                    onLikeChanged: () {
+                      setState(() {}); // Trigger refresh parent if needed
+                    },
+                  );
+                },
               ),
     );
   }

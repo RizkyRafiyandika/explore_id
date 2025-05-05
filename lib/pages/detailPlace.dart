@@ -1,9 +1,10 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/listTrip.dart';
-import 'package:explore_id/widget/TcCustomeCurve.dart';
+import 'package:explore_id/services/likes_Service.dart';
 import 'package:explore_id/widget/popUpAdd.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MyDetailPlace extends StatefulWidget {
   final ListTrip trip;
@@ -35,40 +36,168 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
       maxLines: maxLines,
       textDirection: TextDirection.ltr,
     );
-    tp.layout(
-      maxWidth: MediaQuery.of(context).size.width - 32,
-    ); // padding horizontal
+    tp.layout(maxWidth: MediaQuery.of(context).size.width - 32);
 
     setState(() {
       _isTextOverflow = tp.didExceedMaxLines;
     });
   }
 
+  bool _isLiked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLikeStatus();
+    _loadTotalLikes();
+  }
+
+  void _loadLikeStatus() async {
+    bool isLiked = await isTripLiked(widget.trip.id);
+    setState(() {
+      _isLiked = isLiked;
+    });
+  }
+
+  int _totalLikes = 0;
+
+  void _loadTotalLikes() async {
+    int totalLikes = await getTotalLikesForTrip(widget.trip.id);
+    setState(() {
+      _totalLikes = totalLikes;
+    });
+  }
+
+  // Panggil fungsi ini saat tombol ditekan
+  void showLocationDialog(
+    BuildContext context,
+    double latitude,
+    double longitude,
+    String title,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12), // Rounded corners
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 255, 255, 255),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: EdgeInsets.all(16),
+
+            height: 500, // Total height for dialog
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Title Text
+                Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: tdwhiteblue, // Background color with opacity
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(
+                        4,
+                      ), // Padding inside the circle
+                      child: Icon(Icons.location_on, color: tdwhite, size: 24),
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: tdwhiteblue,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                // Map Container with fixed height for map
+                ClipOval(
+                  child: SizedBox(
+                    height: 300, // Set map height here
+                    width: 300, // Set map width here to make it a circle
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(latitude, longitude),
+                        zoom: 14,
+                      ),
+                      markers: {
+                        Marker(
+                          markerId: MarkerId('locationMarker'),
+                          position: LatLng(latitude, longitude),
+                          infoWindow: InfoWindow(title: title),
+                        ),
+                      },
+                      zoomControlsEnabled: false, // Disable zoom controls
+                      zoomGesturesEnabled: false, // Disable zoom gestures
+                    ),
+                  ),
+                ),
+                SizedBox(height: 8),
+                // Close Button
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: tdcyan,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.exit_to_app_outlined, size: 18),
+                      SizedBox(width: 4),
+                      Text('Close'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    double oneThirdScreenHeight = MediaQuery.of(context).size.height / 2;
+    double imageHeight = MediaQuery.of(context).size.height / 2.5;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // Image header with rounded bottom
             Stack(
-              clipBehavior: Clip.none,
               children: [
-                ClipPath(
-                  clipper: Tccustomecurve(),
-                  child: SizedBox(
-                    height: oneThirdScreenHeight,
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
+                  child: Image.asset(
+                    widget.trip.imagePath,
+                    height: imageHeight,
                     width: double.infinity,
-                    child: Image.asset(
-                      widget.trip.imagePath,
-                      fit: BoxFit.cover,
-                    ),
+                    fit: BoxFit.cover,
                   ),
                 ),
 
-                // Header Buttons
+                // Back & Menu buttons
                 Positioned(
                   top: 40,
                   left: 16,
@@ -76,157 +205,156 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // TODO: menu logic
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.8),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.menu, color: Colors.black),
-                        ),
-                      ),
+                      _buildCircleButton(Icons.arrow_back, () {
+                        Navigator.pop(context);
+                      }),
+                      _buildCircleButton(Icons.location_searching_outlined, () {
+                        showLocationDialog(
+                          context,
+                          widget.trip.latitude, // <- dari data
+                          widget.trip.longitude, // <- dari data
+                          widget.trip.name, // <- nama tempat
+                        );
+                      }),
                     ],
                   ),
                 ),
-
-                // Location Text in image
                 Positioned(
-                  bottom: 80,
-                  left: 20,
-                  right: 20, // Added right padding to prevent overflow
-                  child: Flexible(
-                    child: Text(
-                      widget.trip.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Like Button
-                Positioned(
-                  bottom: 0,
-                  right: 50,
-                  child: Material(
-                    elevation: 8,
-                    shape: const CircleBorder(),
-                    shadowColor: Colors.black.withOpacity(0.4),
-                    color: Colors.white,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: () {
-                        // TODO: toggle like logic
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: Icon(
-                          Icons.favorite_border,
-                          color: Colors.redAccent,
-                          size: 28,
+                  top: 225,
+                  right: 20,
+                  child: StatefulBuilder(
+                    builder:
+                        (context, setState) => Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.4),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              _isLiked ? Icons.favorite : Icons.favorite_border,
+                              color:
+                                  _isLiked
+                                      ? Colors.red
+                                      : Colors.black.withOpacity(0.5),
+                            ),
+                            onPressed: () async {
+                              if (_isLiked) {
+                                await unlikeTrip(widget.trip.id);
+                              } else {
+                                await likeTrip(widget.trip.id);
+                              }
+                              setState(() {
+                                _isLiked = !_isLiked;
+                              });
+                              _loadTotalLikes();
+                            },
+                          ),
                         ),
-                      ),
-                    ),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 48),
+            const SizedBox(height: 20),
 
-            // Detail content
+            // Title + Label
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.trip.name,
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$_totalLikes likes',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tdorange.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      widget.trip.label,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.deepOrange,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Location info
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  Icon(Icons.location_on, color: tdcyan, size: 28),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.trip.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Description card
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title & Label
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.location_on, color: tdcyan, size: 36),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "Location",
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  Text(
-                                    widget.trip.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: tdorange.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          "Label: ${widget.trip.label}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.deepOrange,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    "Description",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-
-                  const SizedBox(height: 16),
-
+                  const SizedBox(height: 8),
                   Text(
                     widget.trip.desk,
                     textAlign: TextAlign.justify,
@@ -250,38 +378,53 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                         style: const TextStyle(color: Colors.deepOrange),
                       ),
                     ),
-
-                  const SizedBox(height: 20),
-
-                  // Button
-                  Center(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: tdcyan.withOpacity(0.8),
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () {
-                        final userId = FirebaseAuth.instance.currentUser!.uid;
-                        final trip = widget.trip;
-                        showAddDestinationDialog(context, userId, trip);
-                      },
-                      child: const Text(
-                        "Add to destination",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 32),
+
+            // Add Button
+            Center(
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.add_location_alt_outlined),
+                label: const Text("Add to Destination"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: tdcyan,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () {
+                  final userId = FirebaseAuth.instance.currentUser!.uid;
+                  final trip = widget.trip;
+                  showAddDestinationDialog(context, userId, trip);
+                },
+              ),
+            ),
+
+            const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.8),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.black),
       ),
     );
   }
