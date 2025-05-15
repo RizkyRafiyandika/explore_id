@@ -1,3 +1,4 @@
+import 'package:explore_id/pages/ediProfile.dart';
 import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/services/auth_firebase.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -64,7 +65,17 @@ class MySettingPage extends StatelessWidget {
                 leading: const Icon(Icons.person),
                 title: const Text("Profile"),
                 subtitle: const Text("Edit your profile"),
-                onTap: isGuest ? null : () {}, // Disable jika guest
+                onTap:
+                    isGuest
+                        ? null
+                        : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MyEditProfile(),
+                            ),
+                          );
+                        }, // Disable jika guest
               ),
               ListTile(
                 leading: const Icon(Icons.lock),

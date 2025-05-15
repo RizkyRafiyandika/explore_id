@@ -47,7 +47,14 @@ class _NavBarState extends State<NavBar> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Login Diperlukan'),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const Icon(Icons.warning, color: Colors.red),
+                SizedBox(width: 10),
+                const Text('Login Diperlukan'),
+              ],
+            ),
             content: const Text(
               'Silakan login terlebih dahulu untuk mengakses fitur ini.',
             ),

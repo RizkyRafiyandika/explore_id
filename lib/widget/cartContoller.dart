@@ -30,9 +30,10 @@ class _AnimatedPieChartState extends State<AnimatedPieChart>
       vsync: this,
       duration: widget.rotationDuration,
     );
-    _rotationAnimation = Tween<double>(begin: -2 * 3.14, end: 0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _rotationAnimation = Tween<double>(
+      begin: -2 * 3.14,
+      end: 0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _controller.forward();
   }
 
@@ -53,7 +54,7 @@ class _AnimatedPieChartState extends State<AnimatedPieChart>
             angle: _rotationAnimation.value,
             child: PieChart(
               PieChartData(
-                centerSpaceRadius: 10,
+                centerSpaceRadius: 20,
                 sectionsSpace: 1,
                 pieTouchData: PieTouchData(
                   touchCallback: (event, pieTouchResponse) {
@@ -62,7 +63,10 @@ class _AnimatedPieChartState extends State<AnimatedPieChart>
                         touchIndex = -1;
                       } else {
                         touchIndex =
-                            pieTouchResponse?.touchedSection?.touchedSectionIndex ?? -1;
+                            pieTouchResponse
+                                ?.touchedSection
+                                ?.touchedSectionIndex ??
+                            -1;
                       }
                     });
                   },

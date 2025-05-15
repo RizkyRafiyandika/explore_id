@@ -49,7 +49,7 @@ class _MyProfileState extends State<MyProfile>
     return Scaffold(
       appBar: AppBar(
         backgroundColor: tdcyan,
-        title: const Text("Profile", style: TextStyle(color: Colors.white)),
+        title: const Text("My Account", style: TextStyle(color: Colors.white)),
         centerTitle: false,
         actions: [
           IconButton(
@@ -109,26 +109,84 @@ class _MyProfileState extends State<MyProfile>
                     displayEmail,
                     style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
+                  Container(
+                    height: 200,
+                    width: double.infinity,
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(16),
+                  ),
+
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
           ),
 
           // Pie Chart
-          Expanded(
+          // Scrollable chart content placed properly inside Stack
+          Positioned(
+            top: MediaQuery.of(context).size.height / 3.2,
+            left: 0,
+            right: 0,
+            bottom: 0,
             child:
                 isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : chartData.isEmpty
                     ? const Center(child: Text("Belum ada data perjalanan."))
-                    : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 20),
-                        AnimatedPieChart(getSections: getSections),
-                        const MyIndicatorWidget(),
-                      ],
+                    : SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          const MyIndicatorWidget(),
+                          const SizedBox(height: 20),
+                          AnimatedPieChart(getSections: getSections),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height / 1.5,
+            left: 150,
+            right: 130,
+            bottom: 100,
+            child: GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Media Sosial'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('📱 WhatsApp: +62 812-3456-7890'),
+                          SizedBox(height: 8),
+                          Text('📸 Instagram: @yourusername'),
+                          SizedBox(height: 8),
+                          Text('✉️ Email: your@email.com'),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 20, right: 20),
+                decoration: BoxDecoration(
+                  color: tdcyan,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Text(
+                    "Social Media",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

@@ -219,6 +219,7 @@ class _MySignInState extends State<MySignIn> {
                     style: TextStyle(color: Colors.white),
                     cursorColor: Colors.white,
                     controller: _passwordController,
+                    obscureText: true, //buat sembunyikan password
                     decoration: InputDecoration(
                       icon: Icon(Icons.lock, color: Colors.white),
                       hintText: "Password",
@@ -280,7 +281,7 @@ class _MySignInState extends State<MySignIn> {
                     if (mounted) {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => NavBar()),
+                        MaterialPageRoute(builder: (e) => NavBar()),
                       );
                     }
                     //input logic login

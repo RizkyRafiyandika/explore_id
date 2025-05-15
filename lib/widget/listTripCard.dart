@@ -39,7 +39,7 @@ class _TripCardGridItemState extends State<TripCardGridItem> {
   void _handleLike() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      customToast("Silahkan login terlebih dahulu");
+      cutomeSneakBar(context, "Silahkan login terlebih dahulu");
       return;
     }
 
@@ -56,7 +56,8 @@ class _TripCardGridItemState extends State<TripCardGridItem> {
 
       widget.onLikeChanged(); // Trigger refresh in parent if needed
     } catch (e) {
-      customToast("Terjadi kesalahan, coba lagi");
+      // ignore: use_build_context_synchronously
+      cutomeSneakBar(context, "Terjadi kesalahan, coba lagi");
     }
   }
 
@@ -66,16 +67,13 @@ class _TripCardGridItemState extends State<TripCardGridItem> {
       onTap: () {
         final user = FirebaseAuth.instance.currentUser;
         if (user == null) {
-          customToast("Silahkan login terlebih dahulu");
+          cutomeSneakBar(context, "Silahkan login terlebih dahulu");
           return;
         }
         Navigator.push(
           context,
           MaterialPageRoute(builder: (e) => MyDetailPlace(trip: widget.trip)),
         );
-        setState(() {
-          isLiked = !isLiked;
-        });
       },
       child: Card(
         elevation: 3,
@@ -86,6 +84,21 @@ class _TripCardGridItemState extends State<TripCardGridItem> {
             children: [
               Positioned.fill(
                 child: Image.asset(widget.trip.imagePath, fit: BoxFit.cover),
+              ),
+
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.3),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    ),
+                  ),
+                ),
               ),
               Positioned(
                 top: 8,
@@ -110,8 +123,6 @@ class _TripCardGridItemState extends State<TripCardGridItem> {
                 child: Container(
                   height: 100,
                   width: double.infinity,
-                  padding: EdgeInsets.all(8),
-                  color: tdwhite.withOpacity(0.1),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

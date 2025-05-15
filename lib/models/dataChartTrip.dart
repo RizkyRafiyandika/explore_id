@@ -30,25 +30,6 @@ class ChartCountData {
 }
 
 // Dummy data untuk testing (aktifkan sesuai kebutuhan)
-List<ChartCountData> dummyCountData = [
-  ChartCountData(name: "Mountain", count: 30, color: Colors.blue),
-  ChartCountData(name: "Culinary", count: 5, color: Colors.orange),
-  ChartCountData(
-    name: "Culture",
-    count: 10,
-    color: Color.fromARGB(255, 76, 104, 175),
-  ),
-  ChartCountData(
-    name: "Beach",
-    count: 5,
-    color: Color.fromARGB(255, 175, 135, 76),
-  ),
-  ChartCountData(
-    name: "Nature",
-    count: 5,
-    color: Color.fromARGB(255, 190, 53, 217),
-  ),
-];
 
 // Toggle untuk testing dummy data
 bool useDummy = false;
@@ -60,36 +41,32 @@ List<ChartData> chartData = [];
 Future<void> generateChartData(String userId) async {
   chartData.clear();
 
-  if (useDummy) {
-    chartData = convertToPercent(dummyCountData);
-  } else {
-    final rawData = await getVisitedPlacesCount(userId);
-    final totalVisits = rawData.values.fold(0, (sum, count) => sum + count);
+  final rawData = await getVisitedPlacesCount(userId);
+  final totalVisits = rawData.values.fold(0, (sum, count) => sum + count);
 
-    // Buat mapping warna berdasarkan nama kategori
-    final colorMap = {
-      'Mountain': Colors.blue,
-      'Culinary': Colors.orange,
-      'Culture': Color.fromARGB(255, 76, 104, 175),
-      'Beach': Color.fromARGB(255, 175, 135, 76),
-      'Nature': Color.fromARGB(255, 190, 53, 217),
-    };
+  // Buat mapping warna berdasarkan nama kategori
+  final colorMap = {
+    'Mountain': Colors.blue.withOpacity(0.8),
+    'Culinary': Colors.orange.withOpacity(0.8),
+    'Culture': Color.fromARGB(255, 76, 104, 175).withOpacity(0.8),
+    'Beach': Color.fromARGB(255, 175, 135, 76).withOpacity(0.8),
+    'Nature': Color.fromARGB(255, 190, 53, 217).withOpacity(0.8),
+  };
 
-    rawData.forEach((place, count) {
-      final int percent = ((count / totalVisits) * 100).round();
+  rawData.forEach((place, count) {
+    final int percent = ((count / totalVisits) * 100).round();
 
-      chartData.add(
-        ChartData(
-          name: place,
-          percent: percent,
-          count: count,
-          color:
-              colorMap[place] ??
-              Colors.grey, // fallback kalau warnanya gak ketemu
-        ),
-      );
-    });
-  }
+    chartData.add(
+      ChartData(
+        name: place,
+        percent: percent,
+        count: count,
+        color:
+            colorMap[place] ??
+            Colors.grey, // fallback kalau warnanya gak ketemu
+      ),
+    );
+  });
 }
 
 // Fungsi untuk mengubah count mentah ke persen

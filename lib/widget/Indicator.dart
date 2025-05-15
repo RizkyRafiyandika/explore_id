@@ -1,4 +1,6 @@
+import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/dataChartTrip.dart';
+import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:flutter/material.dart';
 
 class MyIndicatorWidget extends StatelessWidget {
@@ -6,20 +8,15 @@ class MyIndicatorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children:
-          chartData
-              .map(
-                (data) => Padding(
-                  padding: const EdgeInsets.only(left: 4.0, bottom: 4.0),
-                  child: BuildIndicator(
-                    color: data.color,
-                    text: data.name, // gunakan 'name' karena ini String
-                  ),
-                ),
-              )
-              .toList(),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ...chartData.map(
+          (data) => BuildIndicator(color: data.color, text: data.name),
+        ),
+        const BuildAddIndicator(), // Tambahkan tombol +
+      ],
     );
   }
 }
@@ -32,19 +29,77 @@ class BuildIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: tdwhitepure,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: tdwhitepure,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class BuildAddIndicator extends StatelessWidget {
+  const BuildAddIndicator({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        // Tindakan saat tombol "+" ditekan
+        print("Tambah kategori ditekan");
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MyNearbyPage()),
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.withOpacity(0.4)),
         ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add, color: Colors.white, size: 16),
+            SizedBox(width: 4),
+            Text(
+              "Tambah",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

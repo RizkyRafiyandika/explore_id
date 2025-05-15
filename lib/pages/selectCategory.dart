@@ -29,7 +29,7 @@ class _MySelectCategoryState extends State<MySelectCategory> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Kategori: ${widget.categoryName}"),
+        title: Text(widget.categoryName),
         backgroundColor: tdwhitecyan,
       ),
       body:

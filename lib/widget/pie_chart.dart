@@ -10,7 +10,7 @@ List<PieChartSectionData> getSections(int touchIndex) =>
         .map<int, PieChartSectionData>((index, data) {
           final isTouched = index == touchIndex;
           final double fontSize = isTouched ? 22 : 16;
-          final double radius = isTouched ? 80 : 65;
+          final double radius = isTouched ? 60 : 40;
 
           final section = PieChartSectionData(
             color: data.color,

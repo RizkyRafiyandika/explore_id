@@ -149,7 +149,19 @@ Widget _ListCategory() {
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          title: const Text("More Categories"),
+                          backgroundColor: tdcyan.withOpacity(0.8),
+                          title: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("More Categories"),
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                icon: Icon(Icons.close),
+                              ),
+                            ],
+                          ),
                           content: SizedBox(
                             width: double.maxFinite,
                             child: GridView.builder(
@@ -203,12 +215,6 @@ Widget _ListCategory() {
                               },
                             ),
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text("Close"),
-                            ),
-                          ],
                         );
                       },
                     );
@@ -441,7 +447,8 @@ class _title_ListTrip extends StatelessWidget {
           onPressed: () {
             final user = FirebaseAuth.instance.currentUser;
             if (user == null) {
-              customToast(
+              cutomeSneakBar(
+                context,
                 "Silahkan login terlebih dahulu untuk melihat semua trip",
               );
             } else {

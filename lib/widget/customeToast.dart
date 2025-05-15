@@ -12,3 +12,13 @@ void customToast(String message, {Color backgroundColor = tdwhiteblue}) {
     fontSize: 16.0,
   );
 }
+
+void cutomeSneakBar(BuildContext context, String message) {
+  final snackBar = SnackBar(
+    content: Text(message),
+    duration: const Duration(seconds: 2),
+    backgroundColor: const Color.fromARGB(255, 255, 0, 0),
+    action: SnackBarAction(onPressed: () {}, textColor: tdwhite, label: ''),
+  );
+  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+}
