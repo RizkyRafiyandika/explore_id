@@ -29,11 +29,6 @@ class ChartCountData {
   });
 }
 
-// Dummy data untuk testing (aktifkan sesuai kebutuhan)
-
-// Toggle untuk testing dummy data
-bool useDummy = false;
-
 // Final data yang akan dipakai untuk chart (misal: pie chart)
 List<ChartData> chartData = [];
 

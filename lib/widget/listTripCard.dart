@@ -1,20 +1,16 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/pages/detailPlace.dart';
-import 'package:explore_id/services/likes_Service.dart';
+import 'package:explore_id/provider/tripProvider.dart';
 import 'package:explore_id/widget/customeToast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:explore_id/models/listTrip.dart';
+import 'package:provider/provider.dart';
 
 class TripCardGridItem extends StatefulWidget {
   final ListTrip trip;
-  final VoidCallback onLikeChanged; // Callback ke parent
 
-  const TripCardGridItem({
-    super.key,
-    required this.trip,
-    required this.onLikeChanged,
-  });
+  const TripCardGridItem({super.key, required this.trip});
 
   @override
   State<TripCardGridItem> createState() => _TripCardGridItemState();
@@ -23,20 +19,8 @@ class TripCardGridItem extends StatefulWidget {
 class _TripCardGridItemState extends State<TripCardGridItem> {
   late bool isLiked = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadLikeStatus();
-  }
-
-  Future<void> _loadLikeStatus() async {
-    final status = await isTripLiked(widget.trip.id);
-    setState(() {
-      isLiked = status;
-    });
-  }
-
   void _handleLike() async {
+    final tripProvider = Provider.of<MytripProvider>(context, listen: false);
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       cutomeSneakBar(context, "Silahkan login terlebih dahulu");
@@ -44,17 +28,7 @@ class _TripCardGridItemState extends State<TripCardGridItem> {
     }
 
     try {
-      if (isLiked) {
-        await unlikeTrip(widget.trip.id);
-      } else {
-        await likeTrip(widget.trip.id);
-      }
-
-      setState(() {
-        isLiked = !isLiked;
-      });
-
-      widget.onLikeChanged(); // Trigger refresh in parent if needed
+      await tripProvider.toggleLike(widget.trip.id);
     } catch (e) {
       // ignore: use_build_context_synchronously
       cutomeSneakBar(context, "Terjadi kesalahan, coba lagi");
@@ -63,6 +37,9 @@ class _TripCardGridItemState extends State<TripCardGridItem> {
 
   @override
   Widget build(BuildContext context) {
+    final tripProvider = Provider.of<MytripProvider>(context);
+    final isLiked = tripProvider.isTripLikedLocal(widget.trip.id);
+
     return GestureDetector(
       onTap: () {
         final user = FirebaseAuth.instance.currentUser;

@@ -4,9 +4,11 @@ import 'package:explore_id/pages/home.dart';
 import 'package:explore_id/pages/plan.dart';
 import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/sign_in.dart';
+import 'package:explore_id/provider/userProvider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:provider/provider.dart';
 
 class NavBar extends StatefulWidget {
   final int selectedIndex;
@@ -114,10 +116,17 @@ class _NavBarState extends State<NavBar> {
                     width: 30,
                     height: 30,
                   ),
-                  CircleAvatar(
-                    radius: 15,
-                    backgroundColor: tdwhite,
-                    backgroundImage: AssetImage("assets/profile_pic.jpg"),
+                  Consumer<MyUserProvider>(
+                    builder: (context, provider, child) {
+                      return CircleAvatar(
+                        radius: 15,
+                        backgroundColor: tdwhite,
+                        backgroundImage:
+                            provider.imageFile != null
+                                ? FileImage(provider.imageFile!)
+                                : AssetImage("assets/profile_pic.jpg"),
+                      );
+                    },
                   ),
                 ],
                 onTap: _onItemTapped,

@@ -30,7 +30,7 @@ class _MySelectCategoryState extends State<MySelectCategory> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.categoryName),
-        backgroundColor: tdwhitecyan,
+        backgroundColor: Colors.transparent,
       ),
       body:
           filteredTrips.isEmpty
@@ -44,12 +44,7 @@ class _MySelectCategoryState extends State<MySelectCategory> {
                 ),
                 itemCount: filteredTrips.length,
                 itemBuilder: (context, index) {
-                  return TripCardGridItem(
-                    trip: filteredTrips[index],
-                    onLikeChanged: () {
-                      setState(() {}); // Trigger refresh parent if needed
-                    },
-                  );
+                  return TripCardGridItem(trip: filteredTrips[index]);
                 },
               ),
     );

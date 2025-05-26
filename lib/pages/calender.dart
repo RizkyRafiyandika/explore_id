@@ -50,7 +50,10 @@ class _MyCalendarState extends State<MyCalendar> {
               place: data['place'],
               label: data['label'],
               docId: doc.id,
-              isCheck: data["isCheck"], // Add docId from Firestore document ID
+              isCheck:
+                  data["isCheck"] is bool
+                      ? data["isCheck"]
+                      : false, // Add docId from Firestore document ID
             );
           }).toList();
 
@@ -163,7 +166,17 @@ class _MyCalendarState extends State<MyCalendar> {
   Container _PlanToday() {
     return Container(
       margin: const EdgeInsets.only(bottom: 35),
-      decoration: BoxDecoration(color: tdwhiteblue.withOpacity(0.2)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 100,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child:
@@ -205,7 +218,10 @@ class _MyCalendarState extends State<MyCalendar> {
                               backgroundColor:
                                   event.isCheck ? Colors.grey : tdcyan,
                               foregroundColor: Colors.white,
-                              icon: Icons.check_circle_outline_outlined,
+                              icon:
+                                  event.isCheck
+                                      ? Icons.check_circle
+                                      : Icons.check_circle_outline_outlined,
                               label: 'Check',
                               borderRadius: BorderRadius.only(
                                 topRight: Radius.circular(20),
@@ -223,9 +239,18 @@ class _MyCalendarState extends State<MyCalendar> {
                             decoration: BoxDecoration(
                               color:
                                   event.isCheck
-                                      ? Colors.grey.withOpacity(0.2)
-                                      : Colors.white,
+                                      ? Colors.grey.withOpacity(0.5)
+                                      : Colors.grey.withOpacity(0.1),
                             ),
+
+                            // boxShadow: [
+                            //   BoxShadow(
+                            //     color: Colors.black.withOpacity(0.8),
+                            //     blurRadius: 10,
+                            //     offset: Offset(0, 2),
+                            //   ),
+                            // ],
+                            // ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -289,6 +314,16 @@ class _MyCalendarState extends State<MyCalendar> {
                                           trip.latitude,
                                           trip.longitude,
                                         );
+                                        globalTripEvent = {
+                                          'id': event.id,
+                                          'title': event.title,
+                                          'desk': event.desk,
+                                          'date': event.date,
+                                          'start': event.start,
+                                          'end': event.end,
+                                          'place': event.place,
+                                          'label': event.label,
+                                        };
 
                                         Navigator.pushReplacement(
                                           context,

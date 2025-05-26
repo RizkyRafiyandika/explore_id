@@ -28,7 +28,7 @@ List<ListTrip> ListTrips = [
     daerah: "Jawa Timur",
     label: "Mountain",
     desk:
-        "Gunung Bromo atau dalam bahasa Tengger dieja {Brama}, juga disebut Kaldera Tengger adalah sebuah gunung berapi aktif di Jawa Timur, Indonesia...",
+        "Gunung Bromo atau dalam bahasa Tengger dieja 'Brama', juga disebut Kaldera Tengger, adalah sebuah gunung berapi aktif di Jawa Timur, Indonesia. Gunung ini memiliki ketinggian 2.614 meter di atas permukaan laut dan berada dalam empat wilayah kabupaten, yakni Kabupaten Probolinggo, Kabupaten Pasuruan, Kabupaten Lumajang, dan Kabupaten Malang. Gunung Bromo terkenal sebagai objek wisata utama di Jawa Timur. Sebagai sebuah objek wisata, Bromo menjadi menarik karena statusnya sebagai gunung berapi yang masih aktif. Gunung Bromo termasuk dalam kawasan Taman Nasional Bromo Tengger Semeru.",
     latitude: -7.942493,
     longitude: 112.953012,
   ),
@@ -141,5 +141,64 @@ List<ListTrip> ListTrips = [
         "Gunung tertinggi kedua di Indonesia dengan jalur pendakian menantang dan pemandangan spektakuler.",
     latitude: -8.411400,
     longitude: 116.457000,
+  ),
+  ListTrip(
+    id: "trip12",
+    imagePath: "assets/quest mark.jpeg",
+    name: "Monumen Nasional",
+    daerah: "DKI Jakarta",
+    label: "Historical",
+    desk:
+        "Ikon kebanggaan Indonesia dengan museum sejarah dan pemandangan dari puncaknya.",
+    latitude: -6.175392,
+    longitude: 106.827153,
+  ),
+
+  ListTrip(
+    id: "trip13",
+    imagePath: "assets/quest mark.jpeg",
+    name: "Taman Mini Indonesia Indah",
+    daerah: "DKI Jakarta",
+    label: "Cultural",
+    desk:
+        "Taman budaya dengan paviliun dari seluruh provinsi, cocok untuk wisata edukatif.",
+    latitude: -6.302979,
+    longitude: 106.895451,
+  ),
+
+  ListTrip(
+    id: "trip14",
+    imagePath: "assets/quest mark.jpeg",
+    name: "Kota Tua Jakarta",
+    daerah: "DKI Jakarta",
+    label: "Culture",
+    desk:
+        "Area bersejarah dengan bangunan kolonial Belanda, museum, dan tempat foto klasik.",
+    latitude: -6.135200,
+    longitude: 106.813301,
+  ),
+
+  ListTrip(
+    id: "trip15",
+    imagePath: "assets/quest mark.jpeg",
+    name: "Ancol Dreamland",
+    daerah: "DKI Jakarta",
+    label: "Theme Park",
+    desk:
+        "Destinasi hiburan keluarga dengan pantai, Dunia Fantasi, dan SeaWorld.",
+    latitude: -6.123444,
+    longitude: 106.846726,
+  ),
+
+  ListTrip(
+    id: "trip16",
+    imagePath: "assets/quest mark.jpeg",
+    name: "Museum Macan",
+    daerah: "DKI Jakarta",
+    label: "Culture",
+    desk:
+        "Museum seni kontemporer dengan karya seniman Indonesia dan mancanegara.",
+    latitude: -6.192094,
+    longitude: 106.770634,
   ),
 ];

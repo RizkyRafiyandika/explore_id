@@ -18,7 +18,7 @@ class _ListExploreState extends State<ListExplore> {
   void initState() {
     super.initState();
     selectedTrips = List.from(ListTrips)..shuffle();
-    selectedTrips = selectedTrips.take(3).toList(); // ambil 3 random
+    selectedTrips = selectedTrips.take(4).toList(); // ambil 3 random
   }
 
   @override
@@ -31,7 +31,7 @@ class _ListExploreState extends State<ListExplore> {
             options: CarouselOptions(
               height: 180,
               autoPlay: true,
-              enlargeCenterPage: true,
+              // enlargeCenterPage: true,
               viewportFraction: 0.85,
               onPageChanged: (index, reason) {
                 setState(() {
@@ -132,27 +132,27 @@ class _ListExploreState extends State<ListExplore> {
                 }).toList(),
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children:
-                selectedTrips.asMap().entries.map((entry) {
-                  return Container(
-                    width: 8.0,
-                    height: 8.0,
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 8.0,
-                      horizontal: 4.0,
-                    ),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color:
-                          _current == entry.key
-                              ? Colors.blueAccent
-                              : Colors.grey,
-                    ),
-                  );
-                }).toList(),
-          ),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children:
+          //       selectedTrips.asMap().entries.map((entry) {
+          //         return Container(
+          //           width: 8.0,
+          //           height: 8.0,
+          //           margin: const EdgeInsets.symmetric(
+          //             vertical: 8.0,
+          //             horizontal: 4.0,
+          //           ),
+          //           decoration: BoxDecoration(
+          //             shape: BoxShape.circle,
+          //             color:
+          //                 _current == entry.key
+          //                     ? Colors.blueAccent
+          //                     : Colors.grey,
+          //           ),
+          //         );
+          //       }).toList(),
+          // ),
         ],
       ),
     );

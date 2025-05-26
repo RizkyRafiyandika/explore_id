@@ -2,6 +2,7 @@ import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/pages/detailPlace.dart';
 import 'package:explore_id/pages/likes.dart';
 import 'package:explore_id/widget/filterButton.dart';
+import 'package:explore_id/widget/navBar.dart';
 import 'package:flutter/material.dart';
 
 class MyNearbyPage extends StatefulWidget {
@@ -153,6 +154,15 @@ class _MyNearbyPageState extends State<MyNearbyPage> {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          GestureDetector(
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => NavBar()),
+              );
+            },
+            child: Icon(Icons.arrow_back),
+          ),
           Text(
             "Nearby",
             style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black),

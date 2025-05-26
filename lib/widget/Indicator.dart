@@ -70,8 +70,7 @@ class BuildAddIndicator extends StatelessWidget {
     return InkWell(
       onTap: () {
         // Tindakan saat tombol "+" ditekan
-        print("Tambah kategori ditekan");
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MyNearbyPage()),
         );

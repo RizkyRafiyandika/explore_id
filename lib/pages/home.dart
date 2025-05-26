@@ -6,6 +6,7 @@ import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/selectCategory.dart';
 import 'package:explore_id/pages/sign_in.dart';
+import 'package:explore_id/provider/tripProvider.dart';
 import 'package:explore_id/provider/userProvider.dart';
 import 'package:explore_id/widget/carousel.dart';
 import 'package:explore_id/widget/customeToast.dart';
@@ -26,38 +27,32 @@ class _MyHomeState extends State<MyHome> {
   List<ListTrip> filteredTrips = ListTrips;
 
   @override
+  @override
   void initState() {
     super.initState();
-    searchController.addListener(() => _runFilter(searchController.text));
 
-    // Ambil data user saat pertama kali widget dibuat
+    // 🔽 Muat semua data trip dari provider
     Future.delayed(Duration.zero, () {
-      Provider.of<MyUserProvider>(context, listen: false).fetchUserData();
+      final tripProvider = Provider.of<MytripProvider>(context, listen: false);
+      final userProvider = Provider.of<MyUserProvider>(context, listen: false);
+      userProvider.fetchUserData();
+      tripProvider.setTrips(ListTrips); // Pastikan fungsi ini ada dan jalan
+      tripProvider.fetchLikeStatus();
     });
-  }
 
-  void _runFilter(String query) {
-    if (query.isNotEmpty) {
-      final trips =
-          ListTrips.where(
-            (trip) => trip.name.toLowerCase().contains(query.toLowerCase()),
-          ).toList();
-      setState(() {
-        filteredTrips = trips;
-      });
-    } else {
-      setState(() {
-        filteredTrips = ListTrips;
-      });
-    }
+    // 🔍 Jalankan filter setiap kali search text berubah
+    searchController.addListener(() {
+      final tripProvider = Provider.of<MytripProvider>(context, listen: false);
+      tripProvider.runFilter(searchController.text);
+    });
+
+    // 📥 Muat data user
   }
 
   Future<void> _handleRefresh() async {
     await Future.delayed(Duration(seconds: 1)); // contoh delay
-    // Panggil ulang API atau setState() untuk reload data
-    setState(() {
-      filteredTrips = ListTrips; // Refresh data trip dengan data terbaru
-    });
+    final tripProvider = Provider.of<MytripProvider>(context, listen: false);
+    tripProvider.setTrips(ListTrips);
   }
 
   @override
@@ -69,6 +64,8 @@ class _MyHomeState extends State<MyHome> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<MyUserProvider>(context);
+    final tripProvider = Provider.of<MytripProvider>(context);
+    final trips = tripProvider.filteredTrip;
     final user = FirebaseAuth.instance.currentUser;
 
     // Cek apakah user tidak login atau login anonim
@@ -88,7 +85,7 @@ class _MyHomeState extends State<MyHome> {
           child: Column(
             children: [
               ListExplore(),
-              _SearchBar(searchController),
+              _SearchBar(context, searchController),
               SizedBox(height: 20),
               _ListCategory(),
               _title_ListTrip(),
@@ -100,14 +97,10 @@ class _MyHomeState extends State<MyHome> {
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                 ),
-                itemCount: filteredTrips.length,
+
+                itemCount: trips.length,
                 itemBuilder: (context, index) {
-                  return TripCardGridItem(
-                    trip: filteredTrips[index],
-                    onLikeChanged: () {
-                      setState(() {}); // Trigger refresh parent if needed
-                    },
-                  );
+                  return TripCardGridItem(trip: trips[index]);
                 },
               ),
               SizedBox(height: 50),
@@ -149,7 +142,7 @@ Widget _ListCategory() {
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          backgroundColor: tdcyan.withOpacity(0.8),
+                          backgroundColor: tdcyanwhite.withOpacity(0.9),
                           title: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -270,7 +263,7 @@ Widget _ListCategory() {
   );
 }
 
-Container _SearchBar(searchController) {
+Container _SearchBar(BuildContext context, searchController) {
   return Container(
     margin: const EdgeInsets.only(top: 16, left: 30, right: 30),
     decoration: BoxDecoration(
@@ -312,15 +305,43 @@ Container _SearchBar(searchController) {
             color: Color(0xFF4DB5FF), // warna biru tombol filter
             borderRadius: BorderRadius.circular(15),
           ),
-          child: IconButton(
+          child: PopupMenuButton<String>(
             icon: const Icon(
               Icons.tune, // ikon filter
               color: Colors.white,
               size: 20,
             ),
-            onPressed: () {
-              // Aksi saat tombol filter ditekan
+            onSelected: (value) {
+              // Handle pilihan dropdown
+              if (value == 'Nama') {
+                // TODO: Filter populer
+                Provider.of<MytripProvider>(
+                  context,
+                  listen: false,
+                ).setFilterType(value);
+              } else if (value == 'Daerah') {
+                // TODO: Filter termurah
+                Provider.of<MytripProvider>(
+                  context,
+                  listen: false,
+                ).setFilterType(value);
+              } else if (value == 'Category') {
+                // TODO: Filter terdekat
+                Provider.of<MytripProvider>(
+                  context,
+                  listen: false,
+                ).setFilterType(value);
+              }
             },
+            itemBuilder:
+                (BuildContext context) => [
+                  const PopupMenuItem(value: 'Nama', child: Text('Nama')),
+                  const PopupMenuItem(value: 'Daerah', child: Text('Daerah')),
+                  const PopupMenuItem(
+                    value: 'Category',
+                    child: Text('Category'),
+                  ),
+                ],
           ),
         ),
       ],
@@ -347,16 +368,23 @@ AppBar _MyAppBar(BuildContext context, String username, User? user) {
               );
             }
           },
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                image: AssetImage("assets/profile_pic.jpg"),
-                fit: BoxFit.cover,
-              ),
-            ),
+          child: Consumer<MyUserProvider>(
+            builder: (context, provider, child) {
+              return Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image:
+                        provider.imageFile == null
+                            ? const AssetImage("assets/profile_pic.jpg")
+                            : FileImage(provider.imageFile!) as ImageProvider,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              );
+            },
           ),
         ),
         SizedBox(width: 12), // Spasi antar avatar dan teks
@@ -452,7 +480,7 @@ class _title_ListTrip extends StatelessWidget {
                 "Silahkan login terlebih dahulu untuk melihat semua trip",
               );
             } else {
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => MyNearbyPage()),
               );

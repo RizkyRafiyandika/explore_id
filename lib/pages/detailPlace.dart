@@ -1,10 +1,13 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/listTrip.dart';
+import 'package:explore_id/provider/tripProvider.dart';
 import 'package:explore_id/services/likes_Service.dart';
+import 'package:explore_id/widget/listTripCard.dart';
 import 'package:explore_id/widget/popUpAdd.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 
 class MyDetailPlace extends StatefulWidget {
   final ListTrip trip;
@@ -19,6 +22,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
   bool _isExpanded = false;
   bool _isTextOverflow = false;
   final int maxLines = 5;
+  List<ListTrip> AllTrip = ListTrips;
 
   @override
   void didChangeDependencies() {
@@ -43,20 +47,10 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
     });
   }
 
-  bool _isLiked = false;
-
   @override
   void initState() {
     super.initState();
-    _loadLikeStatus();
     _loadTotalLikes();
-  }
-
-  void _loadLikeStatus() async {
-    bool isLiked = await isTripLiked(widget.trip.id);
-    setState(() {
-      _isLiked = isLiked;
-    });
   }
 
   int _totalLikes = 0;
@@ -184,18 +178,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
             // Image header with rounded bottom
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                  child: Image.asset(
-                    widget.trip.imagePath,
-                    height: imageHeight,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                _headerImage(widget: widget, imageHeight: imageHeight),
 
                 // Back & Menu buttons
                 Positioned(
@@ -222,34 +205,32 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                 Positioned(
                   top: 225,
                   right: 20,
-                  child: StatefulBuilder(
-                    builder:
-                        (context, setState) => Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.4),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              _isLiked ? Icons.favorite : Icons.favorite_border,
-                              color:
-                                  _isLiked
-                                      ? Colors.red
-                                      : Colors.black.withOpacity(0.5),
-                            ),
-                            onPressed: () async {
-                              if (_isLiked) {
-                                await unlikeTrip(widget.trip.id);
-                              } else {
-                                await likeTrip(widget.trip.id);
-                              }
-                              setState(() {
-                                _isLiked = !_isLiked;
-                              });
-                              _loadTotalLikes();
-                            },
-                          ),
+                  child: Consumer<MytripProvider>(
+                    builder: (context, tripProvider, _) {
+                      final _isLiked = tripProvider.isTripLikedLocal(
+                        widget.trip.id,
+                      );
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.4),
+                          shape: BoxShape.circle,
                         ),
+                        child: IconButton(
+                          icon: Icon(
+                            _isLiked ? Icons.favorite : Icons.favorite_border,
+                            color:
+                                _isLiked
+                                    ? Colors.red
+                                    : Colors.black.withOpacity(0.5),
+                          ),
+                          onPressed: () async {
+                            await tripProvider.toggleLike(widget.trip.id);
+
+                            _loadTotalLikes();
+                          },
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -382,33 +363,94 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
               ),
             ),
 
-            const SizedBox(height: 32),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Suggestion",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
 
-            // Add Button
-            Center(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.add_location_alt_outlined),
-                label: const Text("Add to Destination"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: tdcyan,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+                  SizedBox(
+                    height: 200,
+                    width: MediaQuery.of(context).size.width,
+                    child: Builder(
+                      builder: (context) {
+                        final filteredTrips =
+                            AllTrip.where(
+                              (trip) =>
+                                  trip.daerah == widget.trip.daerah &&
+                                  trip.id != widget.trip.id,
+                            ).toList();
+
+                        if (filteredTrips.isEmpty) {
+                          return const Center(
+                            child: Text("No Suggestion for this Session"),
+                          );
+                        }
+
+                        return GridView.builder(
+                          scrollDirection: Axis.horizontal,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 1,
+                                crossAxisSpacing: 0,
+                                mainAxisSpacing: 10,
+                                childAspectRatio:
+                                    2 /
+                                    2, // Sesuaikan dengan tampilan TripCardGridItem
+                              ),
+                          itemCount: filteredTrips.length,
+                          itemBuilder: (context, index) {
+                            final trip = filteredTrips[index];
+                            return TripCardGridItem(
+                              trip: trip,
+                              
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+
+                  const SizedBox(height: 32),
+
+                  // Add Button
+                  Center(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.add_location_alt_outlined),
+                      label: const Text("Add to Destination"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: tdcyan,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () {
+                        final userId = FirebaseAuth.instance.currentUser!.uid;
+                        final trip = widget.trip;
+                        showAddDestinationDialog(context, userId, trip);
+                      },
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  final userId = FirebaseAuth.instance.currentUser!.uid;
-                  final trip = widget.trip;
-                  showAddDestinationDialog(context, userId, trip);
-                },
+
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
-
-            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -425,6 +467,29 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.black),
+      ),
+    );
+  }
+}
+
+class _headerImage extends StatelessWidget {
+  const _headerImage({required this.widget, required this.imageHeight});
+
+  final MyDetailPlace widget;
+  final double imageHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(30),
+        bottomRight: Radius.circular(30),
+      ),
+      child: Image.asset(
+        widget.trip.imagePath,
+        height: imageHeight,
+        width: double.infinity,
+        fit: BoxFit.cover,
       ),
     );
   }
