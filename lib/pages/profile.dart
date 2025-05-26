@@ -1,9 +1,12 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/dataChartTrip.dart';
+import 'package:explore_id/pages/ediProfile.dart';
 import 'package:explore_id/pages/setting.dart';
 import 'package:explore_id/provider/userProvider.dart';
+import 'package:explore_id/services/chart_count.dart';
 import 'package:explore_id/widget/Indicator.dart';
 import 'package:explore_id/widget/cartContoller.dart';
+import 'package:explore_id/widget/graphBar.dart';
 import 'package:explore_id/widget/pie_chart.dart'; // pastikan getSections() berasal dari sini
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -18,15 +21,17 @@ class MyProfile extends StatefulWidget {
 
 class _MyProfileState extends State<MyProfile>
     with SingleTickerProviderStateMixin {
+  //
   late int touchIndex = -1;
   bool isLoading = true;
+  late Future<List<double>> futureData;
 
   @override
   void initState() {
     super.initState();
-
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
+      futureData = getMonthlyVisitCounts(currentUser.uid);
       generateChartData(currentUser.uid).then((_) {
         setState(() {
           isLoading = false;
@@ -65,7 +70,7 @@ class _MyProfileState extends State<MyProfile>
       ),
       body: Stack(
         children: [
-          // Bagian atas
+          // Bagian atas background
           Positioned(
             top: 0,
             left: 0,
@@ -85,106 +90,249 @@ class _MyProfileState extends State<MyProfile>
             ),
           ),
 
-          // Konten profil
-          Padding(
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).size.height / 20,
-            ),
-            child: Center(
-              child: Column(
-                children: [
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundImage: AssetImage('assets/profile_pic.jpg'),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    displayUsername,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+          // Konten profil TETAP (tidak ikut scroll)
+          Positioned(
+            top: MediaQuery.of(context).size.height / 20,
+            left: 0,
+            right: 0,
+            child: Column(
+              children: [
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Consumer<MyUserProvider>(
+                      builder: (context, provider, child) {
+                        return CircleAvatar(
+                          backgroundImage:
+                              provider.imageFile != null
+                                  ? FileImage(provider.imageFile!)
+                                  : AssetImage('assets/profile_pic.jpg')
+                                      as ImageProvider,
+                          radius: 50,
+                        );
+                      },
                     ),
+                    Positioned(
+                      top: 0,
+                      right: 4,
+                      child: InkWell(
+                        onTap: () async {
+                          final provider = await Provider.of<MyUserProvider>(
+                            context,
+                            listen: false,
+                          );
+                          _showImageBar(context, provider);
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: tdcyan,
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: const Icon(
+                            Icons.camera_alt_outlined,
+                            color: tdwhitepure,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  displayUsername,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Text(
-                    displayEmail,
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                  Container(
-                    height: 200,
-                    width: double.infinity,
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    padding: const EdgeInsets.all(16),
-                  ),
-
-                  const SizedBox(height: 10),
-                ],
-              ),
+                ),
+                Text(
+                  displayEmail,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ],
             ),
           ),
 
-          // Pie Chart
-          // Scrollable chart content placed properly inside Stack
+          // Scrollable content (chart + tombol)
           Positioned(
-            top: MediaQuery.of(context).size.height / 3.2,
+            top: MediaQuery.of(context).size.height / 3,
             left: 0,
             right: 0,
             bottom: 0,
-            child:
-                isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : chartData.isEmpty
-                    ? const Center(child: Text("Belum ada data perjalanan."))
-                    : SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: [
-                          const MyIndicatorWidget(),
-                          const SizedBox(height: 20),
-                          AnimatedPieChart(getSections: getSections),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: tdwhite.withOpacity(0.8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).size.height / 1.5,
-            left: 150,
-            right: 130,
-            bottom: 100,
-            child: GestureDetector(
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text('Media Sosial'),
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('📱 WhatsApp: +62 812-3456-7890'),
-                          SizedBox(height: 8),
-                          Text('📸 Instagram: @yourusername'),
-                          SizedBox(height: 8),
-                          Text('✉️ Email: your@email.com'),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 20, right: 20),
-                decoration: BoxDecoration(
-                  color: tdcyan,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    "Social Media",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: MyIndicatorWidget(),
+                    ),
                   ),
-                ),
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : chartData.isEmpty
+                      ? const Align(
+                        alignment: Alignment.center,
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text("Belum ada data perjalanan."),
+                        ),
+                      )
+                      : AnimatedPieChart(getSections: getSections),
+
+                  SizedBox(
+                    height: 200,
+                    child: FutureBuilder<List<double>>(
+                      future: futureData,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot.hasError) {
+                          print(snapshot.error);
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          return const Center(
+                            child: Text("Tidak ada data bulanan."),
+                          );
+                        } else {
+                          // Tidak perlu await di sini
+                          return MyGraphBar(monthlySummary: snapshot.data!);
+                        }
+                      },
+                    ),
+                  ),
+
+                  // Tombol-tombol
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Tombol Sosmed
+                      GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: const Text('Media Sosial'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text('📱 WhatsApp: +62 812-3456-7890'),
+                                    SizedBox(height: 8),
+                                    Text('📸 Instagram: @yourusername'),
+                                    SizedBox(height: 8),
+                                    Text('✉️ Email: your@email.com'),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        child: Container(
+                          height: 50,
+                          width: 160,
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: tdcyan,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: const [
+                              Icon(Icons.share, color: Colors.white, size: 24),
+                              Text(
+                                "Social Media",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Tombol Edit
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MyEditProfile(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          height: 50,
+                          width: 160,
+                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: tdorange,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: const [
+                              Icon(Icons.edit, color: Colors.white, size: 24),
+                              Text(
+                                "Edit Profile",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 80),
+                ],
               ),
             ),
           ),
@@ -192,6 +340,43 @@ class _MyProfileState extends State<MyProfile>
       ),
     );
   }
+}
+
+void _showImageBar(BuildContext context, MyUserProvider provider) {
+  showModalBottomSheet(
+    context: context,
+    builder: (context) {
+      return SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Ambil Foto'),
+              onTap: () async {
+                await provider.uploadImageCamera();
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Pilih dari Galeri'),
+              onTap: () async {
+                await provider.pickImageGalery();
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete),
+              title: const Text('Batal'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
 
 // Clipper untuk efek gelombang ke atas
