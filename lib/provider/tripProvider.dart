@@ -7,6 +7,7 @@ class MytripProvider with ChangeNotifier {
   List<ListTrip> _filteredTrips = [];
 
   final Map<String, bool> _likeStatus = {}; // key: trip.id
+  final Map<String, int> _likeCount = {}; // key: trip.id
 
   String _filterType = 'Nama'; // Default filter
 
@@ -66,9 +67,24 @@ class MytripProvider with ChangeNotifier {
       }
 
       _likeStatus[tripId] = !currentStatus;
+      await loadLikeCounts(tripId); // Update like count after toggling
       notifyListeners();
     } catch (e) {
       throw Exception("Gagal mengubah status like");
     }
+  }
+
+  int getTotalLikesLocal(String tripId) {
+    return _likeCount[tripId] ?? 0;
+  }
+
+  Future<void> loadLikeCounts(String tripId) async {
+    int total = await getTotalLikesForTrip(tripId);
+    _likeCount[tripId] = total;
+    notifyListeners();
+  }
+
+  Catch(e) {
+    throw Exception("Gagal memuat jumlah like untuk trip $e");
   }
 }

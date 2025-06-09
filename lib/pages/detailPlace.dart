@@ -1,7 +1,6 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/provider/tripProvider.dart';
-import 'package:explore_id/services/likes_Service.dart';
 import 'package:explore_id/widget/listTripCard.dart';
 import 'package:explore_id/widget/popUpAdd.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -50,16 +49,8 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
   @override
   void initState() {
     super.initState();
-    _loadTotalLikes();
-  }
-
-  int _totalLikes = 0;
-
-  void _loadTotalLikes() async {
-    int totalLikes = await getTotalLikesForTrip(widget.trip.id);
-    setState(() {
-      _totalLikes = totalLikes;
-    });
+    final provider = Provider.of<MytripProvider>(context, listen: false);
+    provider.loadLikeCounts(widget.trip.id);
   }
 
   // Panggil fungsi ini saat tombol ditekan
@@ -225,8 +216,6 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                           ),
                           onPressed: () async {
                             await tripProvider.toggleLike(widget.trip.id);
-
-                            _loadTotalLikes();
                           },
                         ),
                       );
@@ -257,12 +246,19 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '$_totalLikes likes',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
+                        Consumer<MytripProvider>(
+                          builder: (context, tripProvider, _) {
+                            final totalLikes = tripProvider.getTotalLikesLocal(
+                              widget.trip.id,
+                            );
+                            return Text(
+                              "$totalLikes Likes",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black54,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -411,10 +407,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                           itemCount: filteredTrips.length,
                           itemBuilder: (context, index) {
                             final trip = filteredTrips[index];
-                            return TripCardGridItem(
-                              trip: trip,
-                              
-                            );
+                            return TripCardGridItem(trip: trip);
                           },
                         );
                       },

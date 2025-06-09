@@ -40,6 +40,11 @@ class MyGraphBar extends StatelessWidget {
                       color: Colors.blueAccent,
                       width: 18,
                       borderRadius: BorderRadius.circular(4),
+                      backDrawRodData: BackgroundBarChartRodData(
+                        show: true,
+                        toY: 10,
+                        color: Colors.grey.shade300,
+                      ),
                     ),
                   ],
                 );

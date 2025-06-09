@@ -11,14 +11,14 @@ class ListExplore extends StatefulWidget {
 }
 
 class _ListExploreState extends State<ListExplore> {
-  int _current = 0; // buat track posisi carousel
+  // buat track posisi carousel
   late List<ListTrip> selectedTrips;
 
   @override
   void initState() {
     super.initState();
     selectedTrips = List.from(ListTrips)..shuffle();
-    selectedTrips = selectedTrips.take(4).toList(); // ambil 3 random
+    selectedTrips = selectedTrips.take(4).toList(); // ambil 4 random
   }
 
   @override
@@ -35,7 +35,7 @@ class _ListExploreState extends State<ListExplore> {
               viewportFraction: 0.85,
               onPageChanged: (index, reason) {
                 setState(() {
-                  _current = index; // update posisi halaman
+                  // update posisi halaman
                 });
               },
             ),

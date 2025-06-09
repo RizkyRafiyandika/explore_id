@@ -194,7 +194,19 @@ class _MyProfileState extends State<MyProfile>
                         ),
                       )
                       : AnimatedPieChart(getSections: getSections),
-
+                  const SizedBox(height: 20),
+                  Column(
+                    children: [
+                      Text(
+                        "Monthly Summary",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: tdorange,
+                        ),
+                      ),
+                    ],
+                  ),
                   SizedBox(
                     height: 200,
                     child: FutureBuilder<List<double>>(

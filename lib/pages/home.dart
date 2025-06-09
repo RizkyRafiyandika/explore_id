@@ -45,8 +45,6 @@ class _MyHomeState extends State<MyHome> {
       final tripProvider = Provider.of<MytripProvider>(context, listen: false);
       tripProvider.runFilter(searchController.text);
     });
-
-    // 📥 Muat data user
   }
 
   Future<void> _handleRefresh() async {
