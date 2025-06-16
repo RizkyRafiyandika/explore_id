@@ -21,10 +21,12 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
   bool _isExpanded = false;
   bool _isTextOverflow = false;
   final int maxLines = 5;
-  List<ListTrip> AllTrip = ListTrips;
+  late List<ListTrip> AllTrip;
 
   @override
   void didChangeDependencies() {
+    final tripProvider = Provider.of<MytripProvider>(context);
+    AllTrip = tripProvider.allTrip;
     super.didChangeDependencies();
     _checkTextOverflow();
   }
@@ -478,7 +480,7 @@ class _headerImage extends StatelessWidget {
         bottomLeft: Radius.circular(30),
         bottomRight: Radius.circular(30),
       ),
-      child: Image.asset(
+      child: Image.network(
         widget.trip.imagePath,
         height: imageHeight,
         width: double.infinity,

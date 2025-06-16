@@ -1,4 +1,5 @@
 import 'package:explore_id/colors/color.dart';
+import 'package:explore_id/pages/browser.dart';
 import 'package:explore_id/pages/calender.dart';
 import 'package:explore_id/pages/home.dart';
 import 'package:explore_id/pages/plan.dart';
@@ -20,7 +21,13 @@ class NavBar extends StatefulWidget {
 
 class _NavBarState extends State<NavBar> {
   late int _selectedIndex;
-  final List<Widget> _pages = [MyHome(), MyPlan(), MyCalendar(), MyProfile()];
+  final List<Widget> _pages = [
+    MyHome(),
+    MyPlan(),
+    MyBrowser(),
+    MyCalendar(),
+    MyProfile(),
+  ];
 
   @override
   void initState() {
@@ -30,7 +37,7 @@ class _NavBarState extends State<NavBar> {
 
   void _onItemTapped(int index) {
     // Cek jika user menuju halaman Plan (index 1) atau Calendar (index 2)
-    if (index == 1 || index == 2 || index == 3) {
+    if (index == 1 || index == 3 || index == 4) {
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null || user.isAnonymous) {
         _showLoginAlert();
@@ -111,6 +118,7 @@ class _NavBarState extends State<NavBar> {
                 items: <Widget>[
                   Image.asset("assets/icons/home.png", width: 30, height: 30),
                   Image.asset("assets/icons/book.png", width: 30, height: 30),
+                  Icon(Icons.search, size: 30, color: Colors.white),
                   Image.asset(
                     "assets/icons/calender.png",
                     width: 30,

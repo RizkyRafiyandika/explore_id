@@ -3,11 +3,13 @@ import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/components/global.dart';
 import 'package:explore_id/models/event.dart';
 import 'package:explore_id/models/listTrip.dart';
+import 'package:explore_id/provider/tripProvider.dart';
 import 'package:explore_id/widget/navBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class MyCalendar extends StatefulWidget {
@@ -303,6 +305,11 @@ class _MyCalendarState extends State<MyCalendar> {
                                 children: [
                                   GestureDetector(
                                     onTap: () {
+                                      final List<ListTrip> ListTrips =
+                                          Provider.of<MytripProvider>(
+                                            context,
+                                            listen: false,
+                                          ).allTrip;
                                       final matchingTrips =
                                           ListTrips.where(
                                             (trip) => trip.id == event.id,

@@ -1,6 +1,5 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/category.dart';
-import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/pages/likes.dart';
 import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
@@ -24,7 +23,6 @@ class MyHome extends StatefulWidget {
 
 class _MyHomeState extends State<MyHome> {
   TextEditingController searchController = TextEditingController();
-  List<ListTrip> filteredTrips = ListTrips;
 
   @override
   @override
@@ -32,12 +30,14 @@ class _MyHomeState extends State<MyHome> {
     super.initState();
 
     // 🔽 Muat semua data trip dari provider
-    Future.delayed(Duration.zero, () {
+    Future.delayed(Duration.zero, () async {
       final tripProvider = Provider.of<MytripProvider>(context, listen: false);
       final userProvider = Provider.of<MyUserProvider>(context, listen: false);
       userProvider.fetchUserData();
-      tripProvider.setTrips(ListTrips); // Pastikan fungsi ini ada dan jalan
       tripProvider.fetchLikeStatus();
+      await userProvider.fetchUserData();
+      await tripProvider
+          .loadTripsFromFirestore(); // Gantikan setTrips(ListTrips)
     });
 
     // 🔍 Jalankan filter setiap kali search text berubah
@@ -50,7 +50,7 @@ class _MyHomeState extends State<MyHome> {
   Future<void> _handleRefresh() async {
     await Future.delayed(Duration(seconds: 1)); // contoh delay
     final tripProvider = Provider.of<MytripProvider>(context, listen: false);
-    tripProvider.setTrips(ListTrips);
+    tripProvider.loadTripsFromFirestore();
   }
 
   @override

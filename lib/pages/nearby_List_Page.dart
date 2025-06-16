@@ -1,9 +1,10 @@
-import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/pages/detailPlace.dart';
 import 'package:explore_id/pages/likes.dart';
+import 'package:explore_id/provider/tripProvider.dart';
 import 'package:explore_id/widget/filterButton.dart';
 import 'package:explore_id/widget/navBar.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MyNearbyPage extends StatefulWidget {
   const MyNearbyPage({super.key});
@@ -45,10 +46,14 @@ class _MyNearbyPageState extends State<MyNearbyPage> {
   }
 
   SingleChildRenderObjectWidget _restaurantList(String place) {
+    final tripProvider = Provider.of<MytripProvider>(context);
+    final trips =
+        tripProvider.allTrip; // Assuming 'trips' is the list in your provider
+
     final filteredTrips =
-        ListTrips.where(
-          (trip) => trip.label.toLowerCase() == place.toLowerCase(),
-        ).toList();
+        trips
+            .where((trip) => trip.label.toLowerCase() == place.toLowerCase())
+            .toList();
 
     if (filteredTrips.isEmpty) {
       return Padding(
@@ -79,7 +84,6 @@ class _MyNearbyPageState extends State<MyNearbyPage> {
               scrollDirection: Axis.horizontal,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 1,
-
                 mainAxisSpacing: 10,
               ),
               itemCount: filteredTrips.length,
@@ -110,7 +114,7 @@ class _MyNearbyPageState extends State<MyNearbyPage> {
                             child: Stack(
                               children: [
                                 Positioned.fill(
-                                  child: Image.asset(
+                                  child: Image.network(
                                     trip.imagePath,
                                     fit: BoxFit.fill,
                                   ),

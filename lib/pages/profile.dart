@@ -6,10 +6,12 @@ import 'package:explore_id/provider/userProvider.dart';
 import 'package:explore_id/services/chart_count.dart';
 import 'package:explore_id/widget/Indicator.dart';
 import 'package:explore_id/widget/cartContoller.dart';
+import 'package:explore_id/widget/customeToast.dart';
 import 'package:explore_id/widget/graphBar.dart';
 import 'package:explore_id/widget/pie_chart.dart'; // pastikan getSections() berasal dari sini
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class MyProfile extends StatefulWidget {
@@ -147,9 +149,29 @@ class _MyProfileState extends State<MyProfile>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  displayEmail,
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                GestureDetector(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: displayEmail));
+                    customToast("Email telah disalin ke clipboard");
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        displayEmail,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(
+                        Icons.copy,
+                        color: Colors.grey.withOpacity(0.4),
+                        size: 16,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

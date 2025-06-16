@@ -45,9 +45,13 @@ class _MyLikesPageState extends State<MyLikesPage> {
               .whereType<String>()
               .toList();
 
-      // Filter dari ListTrips lokal berdasarkan id yang di-like
+      final destinationsSnapshot =
+          await _firestore.collection('destinations').get();
       final trips =
-          ListTrips.where((trip) => likedIds.contains(trip.id)).toList();
+          destinationsSnapshot.docs
+              .map((doc) => ListTrip.fromMap(doc.data()))
+              .where((trip) => likedIds.contains(trip.id))
+              .toList();
 
       setState(() {
         likedTrips = trips;
@@ -188,7 +192,10 @@ class _TripCardSlidableItemState extends State<TripCardSlidableItem> {
               children: [
                 // Background image
                 Positioned.fill(
-                  child: Image.asset(widget.trip.imagePath, fit: BoxFit.cover),
+                  child: Image.network(
+                    widget.trip.imagePath,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 // Semi-transparent overlay
                 Positioned.fill(

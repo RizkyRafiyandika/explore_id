@@ -83,7 +83,7 @@ class _TripCardGridItemState extends State<TripCardGridItem>
           child: Stack(
             children: [
               Positioned.fill(
-                child: Image.asset(widget.trip.imagePath, fit: BoxFit.cover),
+                child: Image.network(widget.trip.imagePath, fit: BoxFit.cover),
               ),
               Positioned.fill(
                 child: Container(

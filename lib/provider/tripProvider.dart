@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 class MytripProvider with ChangeNotifier {
   List<ListTrip> _allTrips = [];
   List<ListTrip> _filteredTrips = [];
+  List<ListTrip> _selectedTrips = [];
+  List<ListTrip> _categoryTrips = [];
 
   final Map<String, bool> _likeStatus = {}; // key: trip.id
   final Map<String, int> _likeCount = {}; // key: trip.id
@@ -13,10 +15,32 @@ class MytripProvider with ChangeNotifier {
 
   List<ListTrip> get allTrip => _allTrips;
   List<ListTrip> get filteredTrip => _filteredTrips;
+  List<ListTrip> get selectedTrips => _selectedTrips;
+  List<ListTrip> get categoryTrips => _categoryTrips;
+
+  Future<void> loadTripsFromFirestore() async {
+    try {
+      final trips = await ListTrip.getDestinations(); // Ambil dari Firestore
+      setTrips(trips); // Set ke state
+      await fetchLikeStatus(); // Ambil status like untuk setiap trip
+    } catch (e) {
+      print("❌ Gagal mengambil data trip: $e");
+    }
+  }
 
   void setTrips(List<ListTrip> trip) {
     _allTrips = trip;
     _filteredTrips = trip;
+    _selectedTrips = List.from(_allTrips)..shuffle();
+    _selectedTrips = _selectedTrips.take(4).toList(); // ambil 4 random
+    notifyListeners();
+  }
+
+  void filterByCategory(String category) {
+    _categoryTrips =
+        _allTrips
+            .where((trip) => trip.label.toLowerCase() == category.toLowerCase())
+            .toList();
     notifyListeners();
   }
 
@@ -82,9 +106,5 @@ class MytripProvider with ChangeNotifier {
     int total = await getTotalLikesForTrip(tripId);
     _likeCount[tripId] = total;
     notifyListeners();
-  }
-
-  Catch(e) {
-    throw Exception("Gagal memuat jumlah like untuk trip $e");
   }
 }
