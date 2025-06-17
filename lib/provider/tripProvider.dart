@@ -48,6 +48,7 @@ class MytripProvider with ChangeNotifier {
     _filterType = type;
     notifyListeners();
   }
+  String get filterType => _filterType;
 
   void runFilter(String query) {
     if (query.isNotEmpty) {

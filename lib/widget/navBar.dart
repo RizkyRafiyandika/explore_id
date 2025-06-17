@@ -1,7 +1,7 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/pages/browser.dart';
 import 'package:explore_id/pages/calender.dart';
-import 'package:explore_id/pages/home.dart';
+import 'package:explore_id/pages/home/home.dart';
 import 'package:explore_id/pages/plan.dart';
 import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/sign_in.dart';

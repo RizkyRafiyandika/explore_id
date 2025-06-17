@@ -1,5 +1,6 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/category.dart';
+import 'package:explore_id/pages/home/bottomSheet.dart';
 import 'package:explore_id/pages/likes.dart';
 import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
@@ -300,46 +301,21 @@ Container _SearchBar(BuildContext context, searchController) {
             left: 10,
           ), // Menambahkan jarak antara TextField dan IconButton
           decoration: BoxDecoration(
-            color: Color(0xFF4DB5FF), // warna biru tombol filter
+            color: tdcyan,
             borderRadius: BorderRadius.circular(15),
           ),
-          child: PopupMenuButton<String>(
-            icon: const Icon(
-              Icons.tune, // ikon filter
-              color: Colors.white,
-              size: 20,
-            ),
-            onSelected: (value) {
-              // Handle pilihan dropdown
-              if (value == 'Nama') {
-                // TODO: Filter populer
-                Provider.of<MytripProvider>(
-                  context,
-                  listen: false,
-                ).setFilterType(value);
-              } else if (value == 'Daerah') {
-                // TODO: Filter termurah
-                Provider.of<MytripProvider>(
-                  context,
-                  listen: false,
-                ).setFilterType(value);
-              } else if (value == 'Category') {
-                // TODO: Filter terdekat
-                Provider.of<MytripProvider>(
-                  context,
-                  listen: false,
-                ).setFilterType(value);
-              }
+          child: IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: tdwhitepure,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (context) => const showSheetBottom(),
+              );
             },
-            itemBuilder:
-                (BuildContext context) => [
-                  const PopupMenuItem(value: 'Nama', child: Text('Nama')),
-                  const PopupMenuItem(value: 'Daerah', child: Text('Daerah')),
-                  const PopupMenuItem(
-                    value: 'Category',
-                    child: Text('Category'),
-                  ),
-                ],
+            icon: const Icon(Icons.filter_list, color: Colors.white),
           ),
         ),
       ],
