@@ -17,6 +17,7 @@ Future<List<ListTrip>> getDestinations(String userId) async {
         desk: data['desk'],
         latitude: data['latitude'],
         longitude: data['longitude'],
+        harga: data['harga'],
       );
     }).toList();
   } catch (e) {
@@ -40,6 +41,7 @@ Future<void> uploadListTripToFirestore(List<ListTrip> list) async {
         'desk': trip.desk,
         'latitude': trip.latitude,
         'longitude': trip.longitude,
+        'harga': trip.harga,
       });
       print("✅ Uploaded: ${trip.name}");
     } catch (e) {

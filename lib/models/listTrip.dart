@@ -9,6 +9,7 @@ class ListTrip {
   final String desk;
   final double latitude; // tambahan
   final double longitude; // tambahan
+  final double harga;
 
   ListTrip({
     required this.id,
@@ -19,6 +20,7 @@ class ListTrip {
     required this.desk,
     required this.latitude, // tambahan
     required this.longitude, // tambahan
+    required this.harga,
   });
   // Factory method untuk parsing dari Firestore
   factory ListTrip.fromMap(Map<String, dynamic> data) {
@@ -31,6 +33,7 @@ class ListTrip {
       desk: data['desk'] ?? '',
       latitude: (data['latitude'] ?? 0).toDouble(),
       longitude: (data['longitude'] ?? 0).toDouble(),
+      harga: (data['harga'] ?? 0).toDouble(),
     );
   }
 

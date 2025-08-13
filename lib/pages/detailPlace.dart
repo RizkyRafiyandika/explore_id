@@ -20,33 +20,8 @@ class MyDetailPlace extends StatefulWidget {
 class _MyDetailPlaceState extends State<MyDetailPlace> {
   bool _isExpanded = false;
   bool _isTextOverflow = false;
-  final int maxLines = 5;
+  final int maxLines = 3;
   late List<ListTrip> AllTrip;
-
-  @override
-  void didChangeDependencies() {
-    final tripProvider = Provider.of<MytripProvider>(context);
-    AllTrip = tripProvider.allTrip;
-    super.didChangeDependencies();
-    _checkTextOverflow();
-  }
-
-  void _checkTextOverflow() {
-    final textSpan = TextSpan(
-      text: widget.trip.desk,
-      style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
-    );
-    final tp = TextPainter(
-      text: textSpan,
-      maxLines: maxLines,
-      textDirection: TextDirection.ltr,
-    );
-    tp.layout(maxWidth: MediaQuery.of(context).size.width - 32);
-
-    setState(() {
-      _isTextOverflow = tp.didExceedMaxLines;
-    });
-  }
 
   @override
   void initState() {
@@ -55,103 +30,173 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
     provider.loadLikeCounts(widget.trip.id);
   }
 
-  // Panggil fungsi ini saat tombol ditekan
+  @override
+  void didChangeDependencies() {
+    final tripProvider = Provider.of<MytripProvider>(context);
+    AllTrip = tripProvider.allTrip;
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkTextOverflow());
+  }
+
+  void _checkTextOverflow() {
+    final textSpan = TextSpan(
+      text: widget.trip.desk,
+      style: const TextStyle(fontSize: 15, height: 1.7, color: Colors.black87),
+    );
+    final tp = TextPainter(
+      text: textSpan,
+      maxLines: maxLines,
+      textDirection: TextDirection.ltr,
+    );
+    tp.layout(maxWidth: MediaQuery.of(context).size.width - 64);
+
+    if (mounted) {
+      setState(() {
+        _isTextOverflow = tp.didExceedMaxLines;
+      });
+    }
+  }
+
   void showLocationDialog(
     BuildContext context,
     double latitude,
     double longitude,
     String title,
   ) {
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // Rounded corners
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 255, 255, 255),
-              borderRadius: BorderRadius.circular(20),
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black.withOpacity(0.6),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
             ),
-            padding: EdgeInsets.all(16),
-
-            height: 500, // Total height for dialog
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Title Text
-                Row(
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Header with gradient background
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [tdwhiteblue, tdcyan],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(Icons.location_on, 
+                                color: tdwhiteblue, size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Modern circular map with shadow
                     Container(
                       decoration: BoxDecoration(
-                        color: tdwhiteblue, // Background color with opacity
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
-                      padding: const EdgeInsets.all(
-                        4,
-                      ), // Padding inside the circle
-                      child: Icon(Icons.location_on, color: tdwhite, size: 24),
+                      child: ClipOval(
+                        child: SizedBox(
+                          height: 280,
+                          width: 280,
+                          child: GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: LatLng(latitude, longitude),
+                              zoom: 15,
+                            ),
+                            markers: {
+                              Marker(
+                                markerId: const MarkerId('locationMarker'),
+                                position: LatLng(latitude, longitude),
+                                infoWindow: InfoWindow(title: title),
+                              ),
+                            },
+                            zoomControlsEnabled: false,
+                            zoomGesturesEnabled: true,
+                            mapType: MapType.normal,
+                          ),
+                        ),
+                      ),
                     ),
-                    SizedBox(width: 5),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: tdwhiteblue,
+                    const SizedBox(height: 24),
+                    
+                    // Close button with modern styling
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: tdcyan,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.close, size: 20),
+                            SizedBox(width: 8),
+                            Text('Close', 
+                                style: TextStyle(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 12),
-                // Map Container with fixed height for map
-                ClipOval(
-                  child: SizedBox(
-                    height: 300, // Set map height here
-                    width: 300, // Set map width here to make it a circle
-                    child: GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(latitude, longitude),
-                        zoom: 14,
-                      ),
-                      markers: {
-                        Marker(
-                          markerId: MarkerId('locationMarker'),
-                          position: LatLng(latitude, longitude),
-                          infoWindow: InfoWindow(title: title),
-                        ),
-                      },
-                      zoomControlsEnabled: false, // Disable zoom controls
-                      zoomGesturesEnabled: false, // Disable zoom gestures
-                    ),
-                  ),
-                ),
-                SizedBox(height: 8),
-                // Close Button
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: tdcyan,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.exit_to_app_outlined, size: 18),
-                      SizedBox(width: 4),
-                      Text('Close'),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -161,330 +206,468 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
 
   @override
   Widget build(BuildContext context) {
-    double imageHeight = MediaQuery.of(context).size.height / 2.5;
+    double imageHeight = MediaQuery.of(context).size.height * 0.45;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Image header with rounded bottom
-            Stack(
-              children: [
-                _headerImage(widget: widget, imageHeight: imageHeight),
-
-                // Back & Menu buttons
-                Positioned(
-                  top: 40,
-                  left: 16,
-                  right: 16,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildCircleButton(Icons.arrow_back, () {
-                        Navigator.pop(context);
-                      }),
-                      _buildCircleButton(Icons.location_searching_outlined, () {
-                        showLocationDialog(
-                          context,
-                          widget.trip.latitude, // <- dari data
-                          widget.trip.longitude, // <- dari data
-                          widget.trip.name, // <- nama tempat
-                        );
-                      }),
-                    ],
-                  ),
+      backgroundColor: const Color(0xFFFAFAFA),
+      body: CustomScrollView(
+        slivers: [
+          // Modern SliverAppBar with parallax effect
+          SliverAppBar(
+            expandedHeight: imageHeight,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: Colors.white,
+            leading: _buildModernIconButton(
+              Icons.arrow_back_ios_new,
+              () => Navigator.pop(context),
+            ),
+            actions: [
+              _buildModernIconButton(
+                Icons.location_on_outlined,
+                () => showLocationDialog(
+                  context,
+                  widget.trip.latitude,
+                  widget.trip.longitude,
+                  widget.trip.name,
                 ),
-                Positioned(
-                  top: 225,
-                  right: 20,
-                  child: Consumer<MytripProvider>(
-                    builder: (context, tripProvider, _) {
-                      final _isLiked = tripProvider.isTripLikedLocal(
-                        widget.trip.id,
-                      );
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.4),
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            _isLiked ? Icons.favorite : Icons.favorite_border,
-                            color:
-                                _isLiked
-                                    ? Colors.red
-                                    : Colors.black.withOpacity(0.5),
-                          ),
-                          onPressed: () async {
-                            await tripProvider.toggleLike(widget.trip.id);
-                          },
-                        ),
-                      );
-                    },
+              ),
+              const SizedBox(width: 8),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Hero(
+                    tag: 'trip-${widget.trip.id}',
+                    child: Image.network(
+                      widget.trip.imagePath,
+                      fit: BoxFit.cover,
+                    ),
                   ),
+                  // Gradient overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.3),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Like button positioned elegantly
+                  Positioned(
+                    bottom: 20,
+                    right: 20,
+                    child: _buildLikeButton(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Content
+          SliverToBoxAdapter(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+                  _buildHeader(),
+                  const SizedBox(height: 20),
+                  _buildLocationInfo(),
+                  const SizedBox(height: 24),
+                  _buildDescriptionCard(),
+                  const SizedBox(height: 24),
+                  _buildSuggestionCard(),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernIconButton(IconData icon, VoidCallback onTap) {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.black87, size: 20),
+        onPressed: onTap,
+      ),
+    );
+  }
+
+  Widget _buildLikeButton() {
+    return Consumer<MytripProvider>(
+      builder: (context, tripProvider, _) {
+        final isLiked = tripProvider.isTripLikedLocal(widget.trip.id);
+        return GestureDetector(
+          onTap: () async {
+            await tripProvider.toggleLike(widget.trip.id);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isLiked 
+                  ? Colors.red.withOpacity(0.9) 
+                  : Colors.white.withOpacity(0.9),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
+            child: Icon(
+              isLiked ? Icons.favorite : Icons.favorite_border,
+              color: isLiked ? Colors.white : Colors.red,
+              size: 24,
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-            const SizedBox(height: 20),
-
-            // Title + Label
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.trip.name,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Consumer<MytripProvider>(
+                  builder: (context, tripProvider, _) {
+                    final totalLikes = tripProvider.getTotalLikesLocal(
+                      widget.trip.id,
+                    );
+                    return Row(
                       children: [
+                        Icon(Icons.favorite, color: Colors.red, size: 16),
+                        const SizedBox(width: 4),
                         Text(
-                          widget.trip.name,
+                          "$totalLikes Likes",
                           style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Consumer<MytripProvider>(
-                          builder: (context, tripProvider, _) {
-                            final totalLikes = tripProvider.getTotalLikesLocal(
-                              widget.trip.id,
-                            );
-                            return Text(
-                              "$totalLikes Likes",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black54,
-                              ),
-                            );
-                          },
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [tdorange.withOpacity(0.8), Colors.deepOrange],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: tdorange.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              widget.trip.label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationInfo() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: tdcyan.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: tdcyan.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: tdcyan,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.location_on, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              widget.trip.name,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescriptionCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "About This Place",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          AnimatedCrossFade(
+            firstChild: Text(
+              widget.trip.desk,
+              textAlign: TextAlign.justify,
+              maxLines: maxLines,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.7,
+                color: Colors.black87,
+              ),
+            ),
+            secondChild: Text(
+              widget.trip.desk,
+              textAlign: TextAlign.justify,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.7,
+                color: Colors.black87,
+              ),
+            ),
+            crossFadeState: _isExpanded 
+                ? CrossFadeState.showSecond 
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+          ),
+          if (_isTextOverflow)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                  });
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _isExpanded ? 'Show Less' : 'Read More',
+                      style: TextStyle(
+                        color: tdcyan,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      _isExpanded 
+                          ? Icons.keyboard_arrow_up 
+                          : Icons.keyboard_arrow_down,
+                      color: tdcyan,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestionCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "You Might Also Like",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: Builder(
+              builder: (context) {
+                final filteredTrips = AllTrip.where(
+                  (trip) =>
+                      trip.daerah == widget.trip.daerah &&
+                      trip.id != widget.trip.id,
+                ).toList();
+
+                if (filteredTrips.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.explore_off, 
+                            size: 48, color: Colors.grey[400]),
+                        const SizedBox(height: 8),
+                        Text(
+                          "No suggestions available",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                  );
+                }
 
-                  const SizedBox(width: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: tdorange.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      widget.trip.label,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.deepOrange,
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: filteredTrips.length,
+                  itemBuilder: (context, index) {
+                    final trip = filteredTrips[index];
+                    return Container(
+                      width: 160,
+                      margin: EdgeInsets.only(
+                        right: index == filteredTrips.length - 1 ? 0 : 12,
                       ),
-                    ),
-                  ),
-                ],
-              ),
+                      child: TripCardGridItem(trip: trip),
+                    );
+                  },
+                );
+              },
             ),
-
-            const SizedBox(height: 16),
-
-            // Location info
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Icon(Icons.location_on, color: tdcyan, size: 28),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      widget.trip.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Modern Add to Destination Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                final userId = FirebaseAuth.instance.currentUser!.uid;
+                final trip = widget.trip;
+                showAddDestinationDialog(context, userId, trip);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: tdcyan,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+                shadowColor: tdcyan.withOpacity(0.3),
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Description card
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    "Description",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  Icon(Icons.add_location_alt_outlined, size: 20),
+                  SizedBox(width: 8),
                   Text(
-                    widget.trip.desk,
-                    textAlign: TextAlign.justify,
-                    maxLines: _isExpanded ? null : maxLines,
-                    overflow: TextOverflow.fade,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      height: 1.6,
-                      color: Colors.black87,
+                    "Add to My Destinations",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (_isTextOverflow)
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isExpanded = !_isExpanded;
-                        });
-                      },
-                      child: Text(
-                        _isExpanded ? 'Show Less' : 'See All',
-                        style: const TextStyle(color: Colors.deepOrange),
-                      ),
-                    ),
                 ],
               ),
             ),
-
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Suggestion",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-
-                  SizedBox(
-                    height: 200,
-                    width: MediaQuery.of(context).size.width,
-                    child: Builder(
-                      builder: (context) {
-                        final filteredTrips =
-                            AllTrip.where(
-                              (trip) =>
-                                  trip.daerah == widget.trip.daerah &&
-                                  trip.id != widget.trip.id,
-                            ).toList();
-
-                        if (filteredTrips.isEmpty) {
-                          return const Center(
-                            child: Text("No Suggestion for this Session"),
-                          );
-                        }
-
-                        return GridView.builder(
-                          scrollDirection: Axis.horizontal,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 1,
-                                crossAxisSpacing: 0,
-                                mainAxisSpacing: 10,
-                                childAspectRatio:
-                                    2 /
-                                    2, // Sesuaikan dengan tampilan TripCardGridItem
-                              ),
-                          itemCount: filteredTrips.length,
-                          itemBuilder: (context, index) {
-                            final trip = filteredTrips[index];
-                            return TripCardGridItem(trip: trip);
-                          },
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Add Button
-                  Center(
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.add_location_alt_outlined),
-                      label: const Text("Add to Destination"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: tdcyan,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () {
-                        final userId = FirebaseAuth.instance.currentUser!.uid;
-                        final trip = widget.trip;
-                        showAddDestinationDialog(context, userId, trip);
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCircleButton(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: Colors.black),
-      ),
-    );
-  }
-}
-
-class _headerImage extends StatelessWidget {
-  const _headerImage({required this.widget, required this.imageHeight});
-
-  final MyDetailPlace widget;
-  final double imageHeight;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        bottomLeft: Radius.circular(30),
-        bottomRight: Radius.circular(30),
-      ),
-      child: Image.network(
-        widget.trip.imagePath,
-        height: imageHeight,
-        width: double.infinity,
-        fit: BoxFit.cover,
+          ),
+        ],
       ),
     );
   }
