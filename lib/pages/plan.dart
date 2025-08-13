@@ -245,6 +245,7 @@ class _MyPlanState extends State<MyPlan> with TickerProviderStateMixin {
               .toList();
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -873,4 +874,3 @@ class _MapPlan extends StatelessWidget {
     );
   }
 }
-

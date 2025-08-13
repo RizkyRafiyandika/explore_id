@@ -1,6 +1,11 @@
+import 'dart:ui';
+
 import 'package:explore_id/colors/color.dart';
+import 'package:explore_id/models/comment_model.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/provider/tripProvider.dart';
+import 'package:explore_id/services/comment_service.dart';
+import 'package:explore_id/widget/comment_sessioin.dart';
 import 'package:explore_id/widget/listTripCard.dart';
 import 'package:explore_id/widget/popUpAdd.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,6 +27,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
   bool _isTextOverflow = false;
   final int maxLines = 3;
   late List<ListTrip> AllTrip;
+  final userId = FirebaseAuth.instance.currentUser!.uid;
 
   @override
   void initState() {
@@ -113,8 +119,11 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                               shape: BoxShape.circle,
                             ),
                             padding: const EdgeInsets.all(8),
-                            child: Icon(Icons.location_on, 
-                                color: tdwhiteblue, size: 24),
+                            child: Icon(
+                              Icons.location_on,
+                              color: tdwhiteblue,
+                              size: 24,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -131,7 +140,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Modern circular map with shadow
                     Container(
                       decoration: BoxDecoration(
@@ -168,7 +177,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Close button with modern styling
                     SizedBox(
                       width: double.infinity,
@@ -188,8 +197,10 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                           children: [
                             Icon(Icons.close, size: 20),
                             SizedBox(width: 8),
-                            Text('Close', 
-                                style: TextStyle(fontWeight: FontWeight.w600)),
+                            Text(
+                              'Close',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
                           ],
                         ),
                       ),
@@ -209,7 +220,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
     double imageHeight = MediaQuery.of(context).size.height * 0.45;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
           // Modern SliverAppBar with parallax effect
@@ -259,11 +270,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                     ),
                   ),
                   // Like button positioned elegantly
-                  Positioned(
-                    bottom: 20,
-                    right: 20,
-                    child: _buildLikeButton(),
-                  ),
+                  Positioned(bottom: 20, right: 20, child: _buildLikeButton()),
                 ],
               ),
             ),
@@ -271,27 +278,31 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
 
           // Content
           SliverToBoxAdapter(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 24),
-                  _buildHeader(),
-                  const SizedBox(height: 20),
-                  _buildLocationInfo(),
-                  const SizedBox(height: 24),
-                  _buildDescriptionCard(),
-                  const SizedBox(height: 24),
-                  _buildSuggestionCard(),
-                  const SizedBox(height: 32),
-                ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    _buildHeader(),
+                    const SizedBox(height: 16),
+                    _buildLocationInfo(),
+                    const SizedBox(height: 16),
+                    _buildDescriptionCard(),
+                    const SizedBox(height: 16),
+                    _buildSuggestionCard(),
+                    const SizedBox(height: 16),
+                    MyCommentSession(trip: widget.trip),
+                  ],
+                ),
               ),
             ),
           ),
@@ -333,9 +344,10 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isLiked 
-                  ? Colors.red.withOpacity(0.9) 
-                  : Colors.white.withOpacity(0.9),
+              color:
+                  isLiked
+                      ? Colors.red.withOpacity(0.9)
+                      : Colors.white.withOpacity(0.9),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -357,85 +369,80 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
   }
 
   Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.trip.name,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87,
-                    height: 1.2,
-                  ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.trip.name,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                  height: 1.2,
                 ),
-                const SizedBox(height: 8),
-                Consumer<MytripProvider>(
-                  builder: (context, tripProvider, _) {
-                    final totalLikes = tripProvider.getTotalLikesLocal(
-                      widget.trip.id,
-                    );
-                    return Row(
-                      children: [
-                        Icon(Icons.favorite, color: Colors.red, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          "$totalLikes Likes",
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black54,
-                            fontWeight: FontWeight.w500,
-                          ),
+              ),
+              const SizedBox(height: 8),
+              Consumer<MytripProvider>(
+                builder: (context, tripProvider, _) {
+                  final totalLikes = tripProvider.getTotalLikesLocal(
+                    widget.trip.id,
+                  );
+                  return Row(
+                    children: [
+                      Icon(Icons.favorite, color: Colors.red, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        "$totalLikes Likes",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w500,
                         ),
-                      ],
-                    );
-                  },
-                ),
-              ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [tdorange.withOpacity(0.8), Colors.deepOrange],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: tdorange.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(
+            widget.trip.label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(width: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [tdorange.withOpacity(0.8), Colors.deepOrange],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: tdorange.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Text(
-              widget.trip.label,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildLocationInfo() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: tdcyan.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
@@ -469,8 +476,6 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
 
   Widget _buildDescriptionCard() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -515,9 +520,10 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                 color: Colors.black87,
               ),
             ),
-            crossFadeState: _isExpanded 
-                ? CrossFadeState.showSecond 
-                : CrossFadeState.showFirst,
+            crossFadeState:
+                _isExpanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 300),
           ),
           if (_isTextOverflow)
@@ -541,8 +547,8 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                     ),
                     const SizedBox(width: 4),
                     Icon(
-                      _isExpanded 
-                          ? Icons.keyboard_arrow_up 
+                      _isExpanded
+                          ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
                       color: tdcyan,
                       size: 18,
@@ -558,8 +564,6 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
 
   Widget _buildSuggestionCard() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -587,19 +591,23 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
             height: 200,
             child: Builder(
               builder: (context) {
-                final filteredTrips = AllTrip.where(
-                  (trip) =>
-                      trip.daerah == widget.trip.daerah &&
-                      trip.id != widget.trip.id,
-                ).toList();
+                final filteredTrips =
+                    AllTrip.where(
+                      (trip) =>
+                          trip.daerah == widget.trip.daerah &&
+                          trip.id != widget.trip.id,
+                    ).toList();
 
                 if (filteredTrips.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.explore_off, 
-                            size: 48, color: Colors.grey[400]),
+                        Icon(
+                          Icons.explore_off,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           "No suggestions available",
@@ -631,13 +639,11 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
             ),
           ),
           const SizedBox(height: 24),
-          
-          // Modern Add to Destination Button
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                final userId = FirebaseAuth.instance.currentUser!.uid;
                 final trip = widget.trip;
                 showAddDestinationDialog(context, userId, trip);
               },
@@ -658,10 +664,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace> {
                   SizedBox(width: 8),
                   Text(
                     "Add to My Destinations",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),

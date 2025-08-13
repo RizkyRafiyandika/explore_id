@@ -29,7 +29,15 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: "Explore ID",
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(primarySwatch: Colors.blue),
+        theme: ThemeData(
+          primaryColor: Colors.white, // Warna utama
+          scaffoldBackgroundColor: Colors.white, // Warna background semua page
+          colorScheme: ColorScheme.fromSwatch().copyWith(
+            primary: Colors.white, // Warna elemen utama
+            secondary: Colors.blue, // Warna aksen
+          ),
+        ),
+
         home: WelcomePage(),
       ),
     );
