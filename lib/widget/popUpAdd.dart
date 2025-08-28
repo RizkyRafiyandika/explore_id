@@ -19,6 +19,7 @@ void showAddDestinationDialog(
 
   showDialog(
     context: context,
+    barrierDismissible: false, // Prevent accidental dismissal
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setState) {
@@ -26,6 +27,19 @@ void showAddDestinationDialog(
             final TimeOfDay? picked = await showTimePicker(
               context: context,
               initialTime: TimeOfDay.now(),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    timePickerTheme: TimePickerThemeData(
+                      backgroundColor: tdwhitepure,
+                      hourMinuteTextColor: tdwhiteblue,
+                      dialHandColor: tdcyan,
+                      dialBackgroundColor: tdcyanwhite,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
             );
             if (picked != null) {
               setState(() {
@@ -42,8 +56,22 @@ void showAddDestinationDialog(
             final DateTime? picked = await showDatePicker(
               context: context,
               initialDate: DateTime.now(),
-              firstDate: DateTime(2000),
+              firstDate: DateTime.now(),
               lastDate: DateTime(2100),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    datePickerTheme: DatePickerThemeData(
+                      backgroundColor: tdwhitepure,
+                      surfaceTintColor: tdcyan,
+                    ),
+                    colorScheme: Theme.of(context).colorScheme.copyWith(
+                      primary: tdcyan,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
             );
             if (picked != null) {
               setState(() {
@@ -52,243 +80,415 @@ void showAddDestinationDialog(
             }
           }
 
+          bool isFormValid() {
+            return titleController.text.trim().isNotEmpty &&
+                   deskController.text.trim().isNotEmpty &&
+                   startTime != null &&
+                   endTime != null &&
+                   selectedDate != null;
+          }
+
           void validateAndSave() {
-            String title = titleController.text.trim();
-            String desc = deskController.text.trim();
-            String place = trip.name; // ✅ Diambil langsung dari trip
-            String label = trip.label; // ✅ Diambil langsung dari trip
-
-            String id = trip.id; // ✅ Diambil langsung dari trip
-
-            print("🗺️ ID: $id");
-
-            // print("📝 Title: $title");
-            // print("🗒️ Description: $desc");
-            // print("📍 Place: $place");
-            // print("📅 Date: ${selectedDate?.toIso8601String()}");
-            // print("⏰ Start Time: ${startTime?.format(context)}");
-            // print("⏰ End Time: ${endTime?.format(context)}");
-            // print("Label: $label");
-
-            // print("UID: $userId");
-
-            if (title.isEmpty ||
-                desc.isEmpty ||
-                startTime == null ||
-                endTime == null ||
-                selectedDate == null) {
+            if (!isFormValid()) {
               cutomeSneakBar(context, "Please fill all fields.");
               return;
             }
 
+            // Check if end time is after start time
+            if (startTime != null && endTime != null) {
+              final startMinutes = startTime!.hour * 60 + startTime!.minute;
+              final endMinutes = endTime!.hour * 60 + endTime!.minute;
+              
+              if (endMinutes <= startMinutes) {
+                cutomeSneakBar(context, "End time must be after start time.");
+                return;
+              }
+            }
+
+            String title = titleController.text.trim();
+            String desc = deskController.text.trim();
+            String place = trip.name;
+            String label = trip.label;
+            String id = trip.id;
+
             addEvents(
-                  userId: userId,
-                  events: [
-                    Event(
-                      id: id,
-                      title: title,
-                      desk: desc,
-                      date: selectedDate!,
-                      start: startTime!.format(context),
-                      end: endTime!.format(context),
-                      place: place,
-                      label: label,
-                    ),
-                  ],
-                )
-                .then((_) {
-                  Navigator.of(context).pop(); // Tutup dialog kalau sukses
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Event berhasil disimpan!"),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                })
-                .catchError((e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Gagal simpan event: $e"),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                });
+              userId: userId,
+              events: [
+                Event(
+                  id: id,
+                  title: title,
+                  desk: desc,
+                  date: selectedDate!,
+                  start: startTime!.format(context),
+                  end: endTime!.format(context),
+                  place: place,
+                  label: label,
+                ),
+              ],
+            ).then((_) {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text("Event successfully saved!"),
+                    ],
+                  ),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+            }).catchError((e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.error, color: Colors.white),
+                      SizedBox(width: 8),
+                      Expanded(child: Text("Failed to save event: $e")),
+                    ],
+                  ),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+            });
           }
 
-          return AlertDialog(
+          bool formIsValid = isFormValid();
+
+          return Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
             ),
-            backgroundColor: tdwhitepure, // Added background color
-            title: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: tdcyan,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: Icon(
-                      Icons.add_location_alt_outlined,
-                      color: tdwhite,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    "Add Destination",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: tdwhiteblue,
-                    ),
+            backgroundColor: Colors.transparent,
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.9,
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
+              decoration: BoxDecoration(
+                color: tdwhitepure,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: Offset(0, 10),
                   ),
                 ],
               ),
-            ),
-            content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _MyTextFieldAdd(
-                    titleController: titleController,
-                    label: "Title",
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  _MyTextFieldAdd(
-                    titleController: deskController,
-                    label: "Description",
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: tdwhiteblue),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  // Header with gradient background
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [tdcyan, tdwhiteblue],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      backgroundColor: tdcyanwhite,
-                      foregroundColor: tdwhite,
-                      padding: const EdgeInsets.all(12),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
                     ),
-                    onPressed: selectDate,
-                    child: Text(
-                      selectedDate != null
-                          ? "Date: ${DateFormat('yyyy-MM-dd').format(selectedDate!)}"
-                          : "Date",
-                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              padding: EdgeInsets.all(12),
+                              child: Icon(
+                                Icons.add_location_alt_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Add New Destination",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    "Create your travel itinerary",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-
-                  const SizedBox(height: 10),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: tdwhiteblue),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                  
+                  // Content
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Destination info card
+                          Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: tdcyanwhite,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: tdcyan.withOpacity(0.3),
+                                width: 1,
+                              ),
                             ),
-                            backgroundColor: tdcyanwhite,
-                            foregroundColor: tdwhite,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: tdcyan,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.location_on_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Destination",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: tdwhite.withOpacity(0.7),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        trip.name,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: tdwhite,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          onPressed: () => selectTime(true),
-                          child: Text(
-                            startTime != null
-                                ? "Start: ${startTime!.format(context)}"
-                                : "Start Time",
-                            style: const TextStyle(fontWeight: FontWeight.w500),
+
+                          SizedBox(height: 24),
+
+                          // Form fields
+                          _ModernTextField(
+                            controller: titleController,
+                            label: "Event Title",
+                            hint: "What will you do?",
+                            icon: Icons.event_rounded,
+                            onChanged: (value) {
+                              setState(() {
+                                formIsValid = isFormValid();
+                              });
+                            },
+                          ),
+
+                          SizedBox(height: 16),
+
+                          _ModernTextField(
+                            controller: deskController,
+                            label: "Description",
+                            hint: "Tell us more about this event...",
+                            icon: Icons.description_rounded,
+                            maxLines: 3,
+                            onChanged: (value) {
+                              setState(() {
+                                formIsValid = isFormValid();
+                              });
+                            },
+                          ),
+
+                          SizedBox(height: 20),
+
+                          Text(
+                            "Schedule",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: tdwhiteblue,
+                            ),
+                          ),
+
+                          SizedBox(height: 12),
+
+                          // Date picker
+                          _ModernButton(
+                            onPressed: () async {
+                              await selectDate();
+                              setState(() {
+                                formIsValid = isFormValid();
+                              });
+                            },
+                            icon: Icons.calendar_today_rounded,
+                            label: selectedDate != null
+                                ? DateFormat('EEEE, MMM dd, yyyy').format(selectedDate!)
+                                : "Select Date",
+                            isSelected: selectedDate != null,
+                          ),
+
+                          SizedBox(height: 12),
+
+                          // Time pickers
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _ModernButton(
+                                  onPressed: () async {
+                                    await selectTime(true);
+                                    setState(() {
+                                      formIsValid = isFormValid();
+                                    });
+                                  },
+                                  icon: Icons.access_time_rounded,
+                                  label: startTime != null
+                                      ? startTime!.format(context)
+                                      : "Start Time",
+                                  isSelected: startTime != null,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: _ModernButton(
+                                  onPressed: () async {
+                                    await selectTime(false);
+                                    setState(() {
+                                      formIsValid = isFormValid();
+                                    });
+                                  },
+                                  icon: Icons.access_time_filled_rounded,
+                                  label: endTime != null
+                                      ? endTime!.format(context)
+                                      : "End Time",
+                                  isSelected: endTime != null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Action buttons
+                  Container(
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: Colors.grey.shade400),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.close_rounded, size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  "Cancel",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: tdwhiteblue),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: AnimatedContainer(
+                            duration: Duration(milliseconds: 200),
+                            child: ElevatedButton(
+                              onPressed: formIsValid ? validateAndSave : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: formIsValid ? tdwhiteblue : Colors.grey.shade300,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                elevation: formIsValid ? 4 : 0,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.save_rounded, size: 18),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    "Save Event",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            backgroundColor: tdcyanwhite,
-                            foregroundColor: tdwhite,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          onPressed: () => selectTime(false),
-                          child: Text(
-                            endTime != null
-                                ? "End: ${endTime!.format(context)}"
-                                : "End Time",
-                            style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Place: ${trip.name}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: tdwhite,
-                      ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            actions: [
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.grey),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: validateAndSave,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: tdwhiteblue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text(
-                        "Save",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
           );
         },
       );
@@ -296,32 +496,124 @@ void showAddDestinationDialog(
   );
 }
 
-class _MyTextFieldAdd extends StatelessWidget {
-  const _MyTextFieldAdd({required this.titleController, required this.label});
+class _ModernTextField extends StatelessWidget {
+  const _ModernTextField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    required this.icon,
+    this.maxLines = 1,
+    this.onChanged,
+  });
 
+  final TextEditingController controller;
   final String label;
-
-  final TextEditingController titleController;
+  final String hint;
+  final IconData icon;
+  final int maxLines;
+  final Function(String)? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: titleController,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: const Icon(Icons.place, color: tdwhite),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: tdwhiteblue, width: 1.5),
-          borderRadius: BorderRadius.circular(12),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: tdwhiteblue,
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: tdwhiteblue, width: 2),
-          borderRadius: BorderRadius.circular(12),
+        SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: Icon(icon, color: tdcyan),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: tdcyan.withOpacity(0.3), width: 1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: tdcyan, width: 2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            fillColor: tdcyanwhite,
+            filled: true,
+            hintStyle: TextStyle(color: tdwhite.withOpacity(0.6)),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+          style: TextStyle(
+            color: tdwhite,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        fillColor: tdcyanwhite,
-        filled: true,
-        labelStyle: const TextStyle(color: tdwhite),
+      ],
+    );
+  }
+}
+
+class _ModernButton extends StatelessWidget {
+  const _ModernButton({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+  });
+
+  final VoidCallback onPressed;
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 200),
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+            color: isSelected ? tdcyan : tdcyan.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: isSelected ? tdcyan.withOpacity(0.1) : tdcyanwhite,
+          padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? tdcyan : tdwhite,
+              size: 18,
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? tdcyan : tdwhite,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
