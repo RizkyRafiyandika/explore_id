@@ -1,109 +1,174 @@
-// list_trip_widget.dart
-
 import 'package:explore_id/colors/color.dart';
-import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/pages/detailPlace.dart';
+import 'package:explore_id/provider/tripProvider.dart';
+import 'package:explore_id/widget/customeToast.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:explore_id/models/listTrip.dart';
+import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 
-class ListTripWidget extends StatelessWidget {
-  final List<ListTrip> trips;
+class TripCardGridItem extends StatefulWidget {
+  final ListTrip trip;
 
-  const ListTripWidget({super.key, required this.trips});
+  const TripCardGridItem({super.key, required this.trip});
+
+  @override
+  State<TripCardGridItem> createState() => _TripCardGridItemState();
+}
+
+class _TripCardGridItemState extends State<TripCardGridItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  LottieComposition? _composition;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleLike() async {
+    final tripProvider = Provider.of<MytripProvider>(context, listen: false);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      cutomeSneakBar(context, "Silahkan login terlebih dahulu");
+      return;
+    }
+
+    try {
+      await tripProvider.toggleLike(widget.trip.id);
+    } catch (e) {
+      cutomeSneakBar(context, "Terjadi kesalahan, coba lagi");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 0.8,
-        ),
-        itemCount: trips.length,
-        itemBuilder: (context, index) {
-          final trip = trips[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (e) => MyDetailPlace(trip: trip)),
-              );
-            },
-            child: Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+    final tripProvider = Provider.of<MytripProvider>(context);
+    final isLiked = tripProvider.isTripLikedLocal(widget.trip.id);
+
+    // Sinkron animasi dengan status isLiked setiap build
+    if (_composition != null) {
+      if (isLiked) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+
+    return GestureDetector(
+      onTap: () {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          cutomeSneakBar(context, "Silahkan login terlebih dahulu");
+          return;
+        }
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (e) => MyDetailPlace(trip: widget.trip)),
+        );
+      },
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.network(widget.trip.imagePath, fit: BoxFit.cover),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Image.asset(trip.imagePath, fit: BoxFit.fill),
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.3),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
                     ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.4),
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.favorite_border),
-                          color: Colors.black.withOpacity(0.5),
-                          onPressed: () {
-                            // TODO: Tambahkan logika toggle like
-                          },
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      height: 100,
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: EdgeInsets.all(8),
-                        color: tdwhite.withOpacity(0.1),
-                        child: Column(
-                          children: [
-                            Text(
-                              trip.name,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: tdwhite,
-                              ),
-                            ),
-                            Text(
-                              trip.daerah,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                color: tdwhite,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.4),
+                    shape: BoxShape.circle,
+                  ),
+                  child: GestureDetector(
+                    onTap: _handleLike,
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Lottie.network(
+                        'https://lottie.host/7781efb5-1083-4c60-9dae-7c623b8bc977/kybz2woMOP.json',
+                        controller: _controller,
+                        onLoaded: (composition) {
+                          _composition = composition;
+                          _controller.duration = composition.duration;
+
+                          // // Set posisi awal animasi sesuai status like
+                          if (isLiked) {
+                            _controller.forward();
+                          } else {
+                            _controller.forward();
+                          }
+                        },
+                        repeat: false,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: 100,
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        widget.trip.name,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: tdwhite,
+                        ),
+                      ),
+                      Text(
+                        widget.trip.daerah,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: tdwhite,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

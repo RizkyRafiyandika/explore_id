@@ -7,18 +7,26 @@ Future<void> addEvents({
 }) async {
   try {
     for (Event e in events) {
-      await FirebaseFirestore.instance.collection("events").add({
+      final docRef = await FirebaseFirestore.instance.collection("events").add({
         "userId": userId,
+        "id": e.id,
         "title": e.title,
         "desk": e.desk,
-        "date": Timestamp.fromDate(e.date), // pastikan Event punya field date
+        "date": Timestamp.fromDate(e.date),
         "start": e.start,
         "end": e.end,
         "place": e.place,
+        "label": e.label,
+        "ischeck": e.isCheck,
       });
+
+      // Tambahkan ini:
+      await docRef.update({"docId": docRef.id});
+
+      print("✅ Event ditambahkan dengan docId: ${docRef.id}");
     }
   } catch (e) {
-    print("Error adding events: $e");
+    print("❌ Error adding events: $e");
   }
 }
 
@@ -44,16 +52,22 @@ Future<List<Event>> getEventsForDate({
     return querySnapshot.docs.map((doc) {
       final data = doc.data();
       return Event(
-        title: data["title"],
-        desk: data["desk"],
-        date: (data["date"] as Timestamp).toDate(),
-        start: data["start"],
-        end: data["end"],
-        place: data["place"],
+        id: data['id'],
+        title: data['title'],
+        desk: data['desk'],
+        date: (data['date'] as Timestamp).toDate(),
+        start: data['start'],
+        end: data['end'],
+        place: data['place'],
+        label: data['label'],
+        isCheck:
+            data['isCheck'] ??
+            false, // Ambil dari Firestore, default ke false jika null
+        docId: doc.id,
       );
     }).toList();
   } catch (e) {
-    print("Error fetching events: $e");
+    print("❌ Error fetching events: $e");
     return [];
   }
 }

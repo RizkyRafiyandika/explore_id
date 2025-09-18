@@ -1,12 +1,15 @@
 import 'package:explore_id/colors/color.dart';
+import 'package:explore_id/pages/browser.dart';
 import 'package:explore_id/pages/calender.dart';
-import 'package:explore_id/pages/home.dart';
+import 'package:explore_id/pages/home/home.dart';
 import 'package:explore_id/pages/plan.dart';
 import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/sign_in.dart';
+import 'package:explore_id/provider/userProvider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:provider/provider.dart';
 
 class NavBar extends StatefulWidget {
   final int selectedIndex;
@@ -18,7 +21,13 @@ class NavBar extends StatefulWidget {
 
 class _NavBarState extends State<NavBar> {
   late int _selectedIndex;
-  final List<Widget> _pages = [MyHome(), MyPlan(), MyCalendar(), MyProfile()];
+  final List<Widget> _pages = [
+    MyHome(),
+    MyPlan(),
+    MyBrowser(),
+    MyCalendar(),
+    MyProfile(),
+  ];
 
   @override
   void initState() {
@@ -28,7 +37,7 @@ class _NavBarState extends State<NavBar> {
 
   void _onItemTapped(int index) {
     // Cek jika user menuju halaman Plan (index 1) atau Calendar (index 2)
-    if (index == 1 || index == 2) {
+    if (index == 1 || index == 3 || index == 4) {
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null || user.isAnonymous) {
         _showLoginAlert();
@@ -47,7 +56,14 @@ class _NavBarState extends State<NavBar> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Login Diperlukan'),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const Icon(Icons.warning, color: Colors.red),
+                SizedBox(width: 10),
+                const Text('Login Diperlukan'),
+              ],
+            ),
             content: const Text(
               'Silakan login terlebih dahulu untuk mengakses fitur ini.',
             ),
@@ -102,15 +118,23 @@ class _NavBarState extends State<NavBar> {
                 items: <Widget>[
                   Image.asset("assets/icons/home.png", width: 30, height: 30),
                   Image.asset("assets/icons/book.png", width: 30, height: 30),
+                  Icon(Icons.search, size: 30, color: Colors.white),
                   Image.asset(
                     "assets/icons/calender.png",
                     width: 30,
                     height: 30,
                   ),
-                  CircleAvatar(
-                    radius: 15,
-                    backgroundColor: tdwhite,
-                    backgroundImage: AssetImage("assets/profile_pic.jpg"),
+                  Consumer<MyUserProvider>(
+                    builder: (context, provider, child) {
+                      return CircleAvatar(
+                        radius: 15,
+                        backgroundColor: tdwhite,
+                        backgroundImage:
+                            provider.imageFile != null
+                                ? FileImage(provider.imageFile!)
+                                : AssetImage("assets/profile_pic.jpg"),
+                      );
+                    },
                   ),
                 ],
                 onTap: _onItemTapped,

@@ -1,12 +1,27 @@
+import 'package:explore_id/pages/ediProfile.dart';
 import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/services/auth_firebase.dart';
+import 'package:explore_id/services/notificaion_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class MySettingPage extends StatelessWidget {
+class MySettingPage extends StatefulWidget {
   MySettingPage({super.key});
 
+  @override
+  State<MySettingPage> createState() => _MySettingPageState();
+}
+
+class _MySettingPageState extends State<MySettingPage> {
   final FirebaseAuthService _auth = FirebaseAuthService();
+
+  final NotificationService _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationService.initNotification();
+  }
 
   Future<bool> isGuestUser() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -43,7 +58,21 @@ class MySettingPage extends StatelessWidget {
                 leading: const Icon(Icons.notifications),
                 title: const Text("Notifications"),
                 subtitle: const Text("Manage notification settings"),
-                onTap: () {},
+                onTap: () {
+                  _notificationService.showNotification(
+                    title: "ExploreID",
+                    body: "Notification On💪",
+                  );
+
+                  _notificationService.scheduleNotification(
+                    id: 1,
+                    title: 'Selamat Pagi!',
+                    body: 'Saatnya mulai aktivitas hari ini 💪',
+                    hour: 13,
+                    min: 37,
+                  );
+                  print("notification set on : 13.37");
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.language),
@@ -64,7 +93,17 @@ class MySettingPage extends StatelessWidget {
                 leading: const Icon(Icons.person),
                 title: const Text("Profile"),
                 subtitle: const Text("Edit your profile"),
-                onTap: isGuest ? null : () {}, // Disable jika guest
+                onTap:
+                    isGuest
+                        ? null
+                        : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MyEditProfile(),
+                            ),
+                          );
+                        }, // Disable jika guest
               ),
               ListTile(
                 leading: const Icon(Icons.lock),
