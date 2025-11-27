@@ -1,4 +1,4 @@
-import 'package:explore_id/widget/navBar.dart';
+import 'package:explore_id/pages/role_selection_screen.dart';
 import 'package:flutter/material.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -127,7 +127,9 @@ class _WelcomePageState extends State<WelcomePage> {
                           Future.delayed(Duration(seconds: 1), () {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (context) => NavBar()),
+                              MaterialPageRoute(
+                                builder: (context) => RoleSelectionScreen(),
+                              ),
                             );
                           });
                         } else {

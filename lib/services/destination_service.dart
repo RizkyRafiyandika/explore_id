@@ -18,6 +18,7 @@ Future<List<ListTrip>> getDestinations(String userId) async {
         latitude: data['latitude'],
         longitude: data['longitude'],
         harga: data['harga'],
+        userId: data['userId'],
       );
     }).toList();
   } catch (e) {
@@ -42,10 +43,35 @@ Future<void> uploadListTripToFirestore(List<ListTrip> list) async {
         'latitude': trip.latitude,
         'longitude': trip.longitude,
         'harga': trip.harga,
+        'userId': trip.userId,
       });
       print("✅ Uploaded: ${trip.name}");
     } catch (e) {
       print("❌ Failed to upload ${trip.name}: $e");
     }
+  }
+}
+
+Future<void> addDestination(ListTrip trip) async {
+  try {
+    await FirebaseFirestore.instance
+        .collection('destinations')
+        .doc(trip.id)
+        .set({
+          'id': trip.id,
+          'imagePath': trip.imagePath,
+          'name': trip.name,
+          'daerah': trip.daerah,
+          'label': trip.label,
+          'desk': trip.desk,
+          'latitude': trip.latitude,
+          'longitude': trip.longitude,
+          'harga': trip.harga,
+          'userId': trip.userId,
+        });
+    print("✅ Destination added: ${trip.name}");
+  } catch (e) {
+    print("❌ Failed to add destination: $e");
+    throw e;
   }
 }

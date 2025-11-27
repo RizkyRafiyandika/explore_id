@@ -161,14 +161,25 @@ class _MyProfileState extends State<MyProfile>
                             ),
                             child: Consumer<MyUserProvider>(
                               builder: (context, provider, child) {
+                                ImageProvider backgroundImage;
+
+                                if (provider.profileImageUrl != null &&
+                                    provider.profileImageUrl!.isNotEmpty) {
+                                  backgroundImage = NetworkImage(
+                                    provider.profileImageUrl!,
+                                  );
+                                } else if (provider.imageFile != null) {
+                                  backgroundImage = FileImage(
+                                    provider.imageFile!,
+                                  );
+                                } else {
+                                  backgroundImage = const AssetImage(
+                                    'assets/profile_pic.jpg',
+                                  );
+                                }
+
                                 return CircleAvatar(
-                                  backgroundImage:
-                                      provider.imageFile != null
-                                          ? FileImage(provider.imageFile!)
-                                          : const AssetImage(
-                                                'assets/profile_pic.jpg',
-                                              )
-                                              as ImageProvider,
+                                  backgroundImage: backgroundImage,
                                   radius: 50,
                                 );
                               },

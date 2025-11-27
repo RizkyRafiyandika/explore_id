@@ -17,9 +17,10 @@ void showAddDestinationDialog(
   TimeOfDay? endTime;
   DateTime? selectedDate;
 
-  showDialog(
+  showModalBottomSheet(
     context: context,
-    barrierDismissible: false, // Prevent accidental dismissal
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setState) {
@@ -65,9 +66,9 @@ void showAddDestinationDialog(
                       backgroundColor: tdwhitepure,
                       surfaceTintColor: tdcyan,
                     ),
-                    colorScheme: Theme.of(context).colorScheme.copyWith(
-                      primary: tdcyan,
-                    ),
+                    colorScheme: Theme.of(
+                      context,
+                    ).colorScheme.copyWith(primary: tdcyan),
                   ),
                   child: child!,
                 );
@@ -82,10 +83,10 @@ void showAddDestinationDialog(
 
           bool isFormValid() {
             return titleController.text.trim().isNotEmpty &&
-                   deskController.text.trim().isNotEmpty &&
-                   startTime != null &&
-                   endTime != null &&
-                   selectedDate != null;
+                deskController.text.trim().isNotEmpty &&
+                startTime != null &&
+                endTime != null &&
+                selectedDate != null;
           }
 
           void validateAndSave() {
@@ -98,7 +99,7 @@ void showAddDestinationDialog(
             if (startTime != null && endTime != null) {
               final startMinutes = startTime!.hour * 60 + startTime!.minute;
               final endMinutes = endTime!.hour * 60 + endTime!.minute;
-              
+
               if (endMinutes <= startMinutes) {
                 cutomeSneakBar(context, "End time must be after start time.");
                 return;
@@ -112,98 +113,107 @@ void showAddDestinationDialog(
             String id = trip.id;
 
             addEvents(
-              userId: userId,
-              events: [
-                Event(
-                  id: id,
-                  title: title,
-                  desk: desc,
-                  date: selectedDate!,
-                  start: startTime!.format(context),
-                  end: endTime!.format(context),
-                  place: place,
-                  label: label,
-                ),
-              ],
-            ).then((_) {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text("Event successfully saved!"),
-                    ],
-                  ),
-                  backgroundColor: Colors.green,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              );
-            }).catchError((e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      Icon(Icons.error, color: Colors.white),
-                      SizedBox(width: 8),
-                      Expanded(child: Text("Failed to save event: $e")),
-                    ],
-                  ),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              );
-            });
+                  userId: userId,
+                  events: [
+                    Event(
+                      id: id,
+                      title: title,
+                      desk: desc,
+                      date: selectedDate!,
+                      start: startTime!.format(context),
+                      end: endTime!.format(context),
+                      place: place,
+                      label: label,
+                    ),
+                  ],
+                )
+                .then((_) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text("Event successfully saved!"),
+                        ],
+                      ),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                })
+                .catchError((e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.error, color: Colors.white),
+                          SizedBox(width: 8),
+                          Expanded(child: Text("Failed to save event: $e")),
+                        ],
+                      ),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                });
           }
 
           bool formIsValid = isFormValid();
 
-          return Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            backgroundColor: Colors.transparent,
+          return GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
             child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.9,
-                maxHeight: MediaQuery.of(context).size.height * 0.8,
-              ),
+              height: MediaQuery.of(context).size.height * 0.85,
               decoration: BoxDecoration(
                 color: tdwhitepure,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
                     blurRadius: 20,
-                    offset: Offset(0, 10),
+                    offset: Offset(0, -5),
                   ),
                 ],
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Drag Handle
+                  Center(
+                    child: Container(
+                      margin: EdgeInsets.only(top: 12, bottom: 8),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
                   // Header with gradient background
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(24),
+                    padding: EdgeInsets.fromLTRB(24, 8, 24, 24),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [tdcyan, tdwhiteblue],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
+                      borderRadius: BorderRadius.circular(24),
                     ),
+                    margin: EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       children: [
                         Row(
@@ -249,9 +259,9 @@ void showAddDestinationDialog(
                       ],
                     ),
                   ),
-                  
+
                   // Content
-                  Flexible(
+                  Expanded(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.all(24),
                       child: Column(
@@ -286,7 +296,8 @@ void showAddDestinationDialog(
                                 SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         "Destination",
@@ -364,9 +375,12 @@ void showAddDestinationDialog(
                               });
                             },
                             icon: Icons.calendar_today_rounded,
-                            label: selectedDate != null
-                                ? DateFormat('EEEE, MMM dd, yyyy').format(selectedDate!)
-                                : "Select Date",
+                            label:
+                                selectedDate != null
+                                    ? DateFormat(
+                                      'EEEE, MMM dd, yyyy',
+                                    ).format(selectedDate!)
+                                    : "Select Date",
                             isSelected: selectedDate != null,
                           ),
 
@@ -384,9 +398,10 @@ void showAddDestinationDialog(
                                     });
                                   },
                                   icon: Icons.access_time_rounded,
-                                  label: startTime != null
-                                      ? startTime!.format(context)
-                                      : "Start Time",
+                                  label:
+                                      startTime != null
+                                          ? startTime!.format(context)
+                                          : "Start Time",
                                   isSelected: startTime != null,
                                 ),
                               ),
@@ -400,28 +415,41 @@ void showAddDestinationDialog(
                                     });
                                   },
                                   icon: Icons.access_time_filled_rounded,
-                                  label: endTime != null
-                                      ? endTime!.format(context)
-                                      : "End Time",
+                                  label:
+                                      endTime != null
+                                          ? endTime!.format(context)
+                                          : "End Time",
                                   isSelected: endTime != null,
                                 ),
                               ),
                             ],
                           ),
+
+                          // Add padding for keyboard
+                          SizedBox(
+                            height: MediaQuery.of(context).viewInsets.bottom,
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  
+
                   // Action buttons
                   Container(
                     padding: EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
                       borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(24),
-                        bottomRight: Radius.circular(24),
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, -5),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -458,7 +486,10 @@ void showAddDestinationDialog(
                             child: ElevatedButton(
                               onPressed: formIsValid ? validateAndSave : null,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: formIsValid ? tdwhiteblue : Colors.grey.shade300,
+                                backgroundColor:
+                                    formIsValid
+                                        ? tdwhiteblue
+                                        : Colors.grey.shade300,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
@@ -551,10 +582,7 @@ class _ModernTextField extends StatelessWidget {
             hintStyle: TextStyle(color: tdwhite.withOpacity(0.6)),
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
-          style: TextStyle(
-            color: tdwhite,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(color: tdwhite, fontWeight: FontWeight.w500),
         ),
       ],
     );
@@ -594,11 +622,7 @@ class _ModernButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? tdcyan : tdwhite,
-              size: 18,
-            ),
+            Icon(icon, color: isSelected ? tdcyan : tdwhite, size: 18),
             SizedBox(width: 8),
             Expanded(
               child: Text(

@@ -2,7 +2,7 @@ import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/pages/browser.dart';
 import 'package:explore_id/pages/calender.dart';
 import 'package:explore_id/pages/home/home.dart';
-import 'package:explore_id/pages/plan.dart';
+import 'package:explore_id/pages/plan/screens/plan_screen.dart';
 import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/provider/userProvider.dart';
@@ -23,7 +23,7 @@ class _NavBarState extends State<NavBar> {
   late int _selectedIndex;
   final List<Widget> _pages = [
     MyHome(),
-    MyPlan(),
+    PlanScreen(),
     MyBrowser(),
     MyCalendar(),
     MyProfile(),
@@ -89,9 +89,15 @@ class _NavBarState extends State<NavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Prevent the entire scaffold from resizing when keyboard appears so the
+      // bottom navigation bar stays anchored at the bottom and does not "rise".
+      resizeToAvoidBottomInset: false,
+      // When true, allows the bottom navigation to float over the body content
+      // (handy for the curved navigation overlay effect).
+      extendBody: true,
       body: Stack(
         children: [
-          _pages[_selectedIndex],
+          IndexedStack(index: _selectedIndex, children: _pages),
           Positioned(
             bottom: 0,
             left: 0,

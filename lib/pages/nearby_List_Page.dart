@@ -179,27 +179,34 @@ class _MyNearbyPageState extends State<MyNearbyPage> {
                 MaterialPageRoute(builder: (context) => MyLikesPage()),
               );
             },
-            child: Stack(
-              children: [
-                Icon(
-                  Icons.favorite_border,
-                  weight: 30,
-                  color: Colors.black.withOpacity(0.6),
-                ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
-                    ),
+            child: Consumer<MytripProvider>(
+              builder:
+                  (context, tripProvider, child) => Stack(
+                    children: [
+                      Icon(
+                        Icons.favorite_border,
+                        weight: 30,
+                        color: Colors.black.withOpacity(0.6),
+                      ),
+                      if (tripProvider.hasNewLikes)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ],
             ),
           ),
         ],

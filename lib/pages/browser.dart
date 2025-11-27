@@ -1,9 +1,13 @@
 import 'package:explore_id/colors/color.dart';
-import 'package:explore_id/services/comment_service.dart';
+import 'package:explore_id/pages/detailPlace.dart';
+import 'package:explore_id/provider/tripProvider.dart';
+import 'package:explore_id/widget/listTripCard.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MyBrowser extends StatefulWidget {
-  const MyBrowser({super.key});
+  final String? initialQuery;
+  const MyBrowser({super.key, this.initialQuery});
 
   @override
   State<MyBrowser> createState() => _MyBrowserState();
@@ -11,38 +15,58 @@ class MyBrowser extends StatefulWidget {
 
 class _MyBrowserState extends State<MyBrowser> {
   final TextEditingController browserController = TextEditingController();
-  bool _isTextFilled = false;
+  String selectedFilter = "All";
+  final List<String> filterOptions = [
+    "All",
+    "Mountain",
+    "Culture",
+    "Nature",
+    "Culinary",
+    "Beach",
+    "Monument",
+  ];
 
   @override
   void initState() {
     super.initState();
-    // Listen to changes in the text field
-    browserController.addListener(() {
-      setState(() {
-        _isTextFilled = browserController.text.isNotEmpty;
+    // initialize with provided initial query if available
+    if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
+      browserController.text = widget.initialQuery!;
+      // run the filter initially
+      // run the filter after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Provider.of<MytripProvider>(
+          context,
+          listen: false,
+        ).runFilter(widget.initialQuery!);
       });
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: Padding(
-        padding: const EdgeInsets.only(top: 16),
-        child: Column(children: [_browserField()]),
-      ),
-    );
-  }
+    final tripProvider = Provider.of<MytripProvider>(context);
+    final trips = tripProvider.filteredTrip;
+    final filteredTrips =
+        selectedFilter == "All"
+            ? trips
+            : trips
+                .where(
+                  (trip) =>
+                      trip.label.toLowerCase() == selectedFilter.toLowerCase(),
+                )
+                .toList();
 
-  Widget _browserField() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      child: Column(
-        children: [
-          Row(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Container(
+          height: 50,
+          child: Row(
             children: [
-              // TextField
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
@@ -52,15 +76,13 @@ class _MyBrowserState extends State<MyBrowser> {
                         color: Colors.grey.withOpacity(0.2),
                         spreadRadius: 1,
                         blurRadius: 4,
-                        offset: const Offset(
-                          0,
-                          4,
-                        ), // changes position of shadow
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: TextField(
                     controller: browserController,
+                    onChanged: (val) => tripProvider.runFilter(val),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: tdwhitepure,
@@ -74,37 +96,119 @@ class _MyBrowserState extends State<MyBrowser> {
                   ),
                 ),
               ),
-
-              // Search button
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder:
-                    (child, animation) =>
-                        FadeTransition(opacity: animation, child: child),
-                child:
-                    _isTextFilled
-                        ? Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: GestureDetector(
-                            onTap: () {
-                              print("Searching: ${browserController.text}");
-                            },
-
-                            child: const Text(
-                              "Cancel",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: tdwhiteblue,
-                              ),
+            ],
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children:
+                  filterOptions.map((filter) {
+                    final isSelected = selectedFilter == filter;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: GestureDetector(
+                        onTap: () => setState(() => selectedFilter = filter),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected ? tdcyan : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected ? tdcyan : Colors.transparent,
+                              width: 1.5,
                             ),
                           ),
-                        )
-                        : const SizedBox.shrink(key: ValueKey("empty")),
-              ),
-            ],
+                          child: Text(
+                            filter,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+            ),
+          ),
+          Expanded(
+            child:
+                filteredTrips.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 80,
+                            color: Colors.grey.shade300,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            "No destinations found",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            "Try different search terms",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      child: GridView.builder(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 0.85,
+                            ),
+                        itemCount: filteredTrips.length,
+                        itemBuilder: (context, index) {
+                          final trip = filteredTrips[index];
+                          return GestureDetector(
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => MyDetailPlace(trip: trip),
+                                  ),
+                                ),
+                            child: TripCardGridItem(trip: trip),
+                          );
+                        },
+                      ),
+                    ),
           ),
         ],
       ),
     );
   }
+
+  // old _browserField removed — replaced by inline AppBar search and body
 }

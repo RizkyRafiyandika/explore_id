@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:explore_id/pages/home/home.dart';
+import 'package:explore_id/pages/role_selection_screen.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,11 +14,11 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    // Pindah ke halaman utama setelah 5 detik
+    // Pindah ke halaman role selection setelah 5 detik
     Timer(Duration(seconds: 5), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MyHome()),
+        MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
       );
     });
   }

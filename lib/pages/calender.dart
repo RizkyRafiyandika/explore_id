@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/components/global.dart';
@@ -24,6 +25,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
   Map<DateTime, List<Event>> _eventsByDay = {};
   late AnimationController _fadeController;
   late AnimationController _slideController;
+  StreamSubscription<QuerySnapshot>? _eventsSubscription;
 
   @override
   void initState() {
@@ -36,51 +38,57 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
       duration: Duration(milliseconds: 400),
       vsync: this,
     );
-    fetchEvents();
+    _setupEventStream();
     _fadeController.forward();
   }
 
   @override
   void dispose() {
+    _eventsSubscription?.cancel();
     _fadeController.dispose();
     _slideController.dispose();
     super.dispose();
   }
 
-  Future<void> fetchEvents() async {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
+  void _setupEventStream() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final userId = user.uid;
 
-    try {
-      final snapshot =
-          await FirebaseFirestore.instance
-              .collection('events')
-              .where('userId', isEqualTo: userId)
-              .get();
+    _eventsSubscription = FirebaseFirestore.instance
+        .collection('events')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            final List<Event> events =
+                snapshot.docs.map((doc) {
+                  final data = doc.data();
+                  return Event(
+                    id: data['id'],
+                    title: data['title'],
+                    desk: data['desk'],
+                    date: (data['date'] as Timestamp).toDate(),
+                    start: data['start'],
+                    end: data['end'],
+                    place: data['place'],
+                    label: data['label'],
+                    docId: doc.id,
+                    isCheck: data["isCheck"] is bool ? data["isCheck"] : false,
+                  );
+                }).toList();
 
-      final List<Event> events =
-          snapshot.docs.map((doc) {
-            final data = doc.data();
-            return Event(
-              id: data['id'],
-              title: data['title'],
-              desk: data['desk'],
-              date: (data['date'] as Timestamp).toDate(),
-              start: data['start'],
-              end: data['end'],
-              place: data['place'],
-              label: data['label'],
-              docId: doc.id,
-              isCheck: data["isCheck"] is bool ? data["isCheck"] : false,
-            );
-          }).toList();
-
-      setState(() {
-        _eventsByDay = groupEventsByDate(events);
-      });
-      _slideController.forward();
-    } catch (e) {
-      print("Error fetching events: $e");
-    }
+            if (mounted) {
+              setState(() {
+                _eventsByDay = groupEventsByDate(events);
+              });
+              _slideController.forward();
+            }
+          },
+          onError: (e) {
+            print("Error fetching events: $e");
+          },
+        );
   }
 
   Map<DateTime, List<Event>> groupEventsByDate(List<Event> events) {
@@ -449,7 +457,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
               key: ValueKey(event.id),
               endActionPane: ActionPane(
                 motion: BehindMotion(),
-                extentRatio: 0.25,
+                extentRatio: 0.5,
                 children: [
                   SlidableAction(
                     onPressed: (context) async {
@@ -462,7 +470,6 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                             .collection("events")
                             .doc(event.docId)
                             .update({"isCheck": event.isCheck});
-                        await fetchEvents();
                       }
                     },
                     backgroundColor:
@@ -470,6 +477,21 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                     foregroundColor: Colors.white,
                     icon: event.isCheck ? Icons.undo : Icons.check_circle,
                     label: event.isCheck ? 'Undo' : 'Done',
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  SlidableAction(
+                    onPressed: (context) async {
+                      if (event.docId != null) {
+                        await FirebaseFirestore.instance
+                            .collection("events")
+                            .doc(event.docId)
+                            .delete();
+                      }
+                    },
+                    backgroundColor: Color(0xFFEF4444),
+                    foregroundColor: Colors.white,
+                    icon: Icons.delete,
+                    label: 'Delete',
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ],

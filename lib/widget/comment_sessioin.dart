@@ -210,27 +210,13 @@ class _MyCommentSessionState extends State<MyCommentSession> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 20),
         // Comment Input dengan glassmorphism effect
         Container(
           margin: EdgeInsets.symmetric(horizontal: 16),
           padding: EdgeInsets.all(4),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.white.withOpacity(0.1),
-                Colors.white.withOpacity(0.05),
-              ],
-            ),
             borderRadius: BorderRadius.circular(25),
             border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: isDark ? Colors.black26 : Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
           ),
           child: Row(
             children: [

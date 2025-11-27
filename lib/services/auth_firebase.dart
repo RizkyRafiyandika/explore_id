@@ -25,6 +25,7 @@ class FirebaseAuthService {
           "email": email,
           "username": username,
           "id": user.uid,
+          "role": null, // Role akan diisi setelah user memilih role atau login
           "createdAt": FieldValue.serverTimestamp(),
         });
         return user;
@@ -123,6 +124,18 @@ class FirebaseAuthService {
     } catch (e) {
       print("Error during Facebook sign-in: $e");
       return null;
+    }
+  }
+
+  // Check if user exists in Firestore
+  Future<bool> isUserInFirestore(String uid) async {
+    try {
+      DocumentSnapshot doc =
+          await _firestore.collection("users").doc(uid).get();
+      return doc.exists;
+    } catch (e) {
+      print("Error checking user in Firestore: $e");
+      return false;
     }
   }
 

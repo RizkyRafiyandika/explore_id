@@ -1,10 +1,8 @@
 import 'dart:ui';
 
 import 'package:explore_id/colors/color.dart';
-import 'package:explore_id/models/comment_model.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/provider/tripProvider.dart';
-import 'package:explore_id/services/comment_service.dart';
 import 'package:explore_id/widget/comment_sessioin.dart';
 import 'package:explore_id/widget/listTripCard.dart';
 import 'package:explore_id/widget/popUpAdd.dart';
@@ -33,8 +31,6 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
 
   AnimationController? _slideController;
   AnimationController? _fadeController;
-  Animation<Offset>? _slideAnimation;
-  Animation<double>? _fadeAnimation;
 
   @override
   void initState() {
@@ -49,18 +45,6 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _slideController!, curve: Curves.easeOutCubic),
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController!, curve: Curves.easeOut));
 
     // Load trip data
     final provider = Provider.of<MytripProvider>(context, listen: false);
@@ -152,7 +136,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                   children: [
                     // Enhanced header with better visual hierarchy
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
@@ -196,17 +180,19 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                               children: [
                                 Text(
                                   title,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.headlineMedium!.copyWith(
                                     color: Colors.white,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   "Tap to explore location",
-                                  style: TextStyle(
-                                    fontSize: 13,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium!.copyWith(
                                     color: Colors.white.withOpacity(0.8),
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -219,10 +205,9 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          // Enhanced map with better styling
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
@@ -238,7 +223,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20),
                               child: SizedBox(
-                                height: 300,
+                                height: 240,
                                 width: double.infinity,
                                 child: GoogleMap(
                                   initialCameraPosition: CameraPosition(
@@ -263,7 +248,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                               ),
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
 
                           // Enhanced close button
                           SizedBox(
@@ -273,12 +258,14 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                                 HapticFeedback.lightImpact();
                                 Navigator.pop(context);
                               },
-                              icon: const Icon(Icons.close_rounded, size: 22),
-                              label: const Text(
+                              icon: const Icon(Icons.close_rounded, size: 18),
+                              label: Text(
                                 'Close',
-                                style: TextStyle(
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.labelLarge!.copyWith(
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 16,
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
@@ -310,7 +297,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
 
   @override
   Widget build(BuildContext context) {
-    double imageHeight = MediaQuery.of(context).size.height * 0.5;
+    double imageHeight = MediaQuery.of(context).size.height * 0.44;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -344,64 +331,82 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
               }),
               const SizedBox(width: 8),
             ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Hero(
-                    tag: 'trip-${widget.trip.id}',
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(24),
-                          bottomRight: Radius.circular(24),
+            title: const SizedBox.shrink(),
+            flexibleSpace: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final double currentHeight = constraints.biggest.height;
+                final double minHeight = kToolbarHeight;
+                final double maxHeight = imageHeight;
+                final double t = ((currentHeight - minHeight) /
+                        (maxHeight - minHeight))
+                    .clamp(0.0, 1.0);
+                final double expandedOpacity = t; // shows when expanded
+                final double collapsedOpacity = 1 - t; // shows when collapsed
+
+                return FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Hero(
+                        tag: 'trip-${widget.trip.id}',
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(24),
+                              bottomRight: Radius.circular(24),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(24),
+                              bottomRight: Radius.circular(24),
+                            ),
+                            child: Image.network(
+                              widget.trip.imagePath,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.image_not_supported,
+                                    size: 48,
+                                    color: Colors.grey,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         ),
                       ),
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(24),
-                          bottomRight: Radius.circular(24),
-                        ),
-                        child: Image.network(
-                          widget.trip.imagePath,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[300],
-                              child: const Icon(
-                                Icons.image_not_supported,
-                                size: 64,
-                                color: Colors.grey,
-                              ),
-                            );
-                          },
+                      // Enhanced gradient overlay
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(24),
+                            bottomRight: Radius.circular(24),
+                          ),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.2),
+                              Colors.black.withOpacity(0.5),
+                            ],
+                            stops: const [0.5, 0.8, 1.0],
+                          ),
                         ),
                       ),
-                    ),
+                      // Better positioned like button
+                      Positioned(
+                        bottom: 12,
+                        right: 12,
+                        child: _buildLikeButton(),
+                      ),
+                    ],
                   ),
-                  // Enhanced gradient overlay
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(24),
-                        bottomRight: Radius.circular(24),
-                      ),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.2),
-                          Colors.black.withOpacity(0.5),
-                        ],
-                        stops: const [0.5, 0.8, 1.0],
-                      ),
-                    ),
-                  ),
-                  // Better positioned like button
-                  Positioned(bottom: 24, right: 24, child: _buildLikeButton()),
-                ],
-              ),
+                );
+              },
             ),
           ),
 
@@ -431,7 +436,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -443,17 +448,17 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                         _buildPriceCard(),
                         const SizedBox(height: 20),
                         _buildLocationInfo(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         _buildDescriptionCard(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
                         // Reviews & Comments section
                         _buildCommentSection(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
                         // You Might Also Like section (dipindah ke bawah)
                         _buildSuggestionCard(),
-                        const SizedBox(height: 100), // Bottom padding
+                        const SizedBox(height: 72), // Bottom padding
                       ],
                     ),
                   ),
@@ -482,9 +487,9 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
         border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
       ),
       child: IconButton(
-        icon: Icon(icon, color: Colors.black87, size: 22),
+        icon: Icon(icon, color: Colors.black87, size: 20),
         onPressed: onTap,
-        splashRadius: 24,
+        splashRadius: 20,
       ),
     );
   }
@@ -501,7 +506,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.elasticOut,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isLiked ? Colors.red : Colors.white.withOpacity(0.95),
               shape: BoxShape.circle,
@@ -526,7 +531,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
             child: Icon(
               isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
               color: isLiked ? Colors.white : Colors.red,
-              size: 28,
+              size: 24,
             ),
           ),
         );
@@ -536,7 +541,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
 
   Widget _buildPriceCard() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.green.shade400, Colors.green.shade600],
@@ -563,25 +568,23 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
             child: Icon(
               Icons.local_offer_rounded,
               color: Colors.green.shade600,
-              size: 24,
+              size: 20,
             ),
           ),
           const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Starting Price",
-                style: TextStyle(
-                  fontSize: 14,
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                   color: Colors.white70,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               Text(
-                "Rp ${widget.trip.harga.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}",
-                style: const TextStyle(
-                  fontSize: 24,
+                "Rp ${widget.trip.harga.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\\d{1,3})(?=(\\d{3})+(?!\\d))'), (Match m) => '${m[1]}.')}",
+                style: Theme.of(context).textTheme.headlineLarge!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -603,9 +606,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
             children: [
               Text(
                 widget.trip.name,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
+                style: Theme.of(context).textTheme.headlineLarge!.copyWith(
                   color: Colors.black87,
                   height: 1.1,
                   letterSpacing: -0.5,
@@ -637,8 +638,9 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                         const SizedBox(width: 6),
                         Text(
                           "$totalLikes Likes",
-                          style: const TextStyle(
-                            fontSize: 14,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyLarge!.copyWith(
                             color: Colors.red,
                             fontWeight: FontWeight.w600,
                           ),
@@ -653,7 +655,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
         ),
         const SizedBox(width: 16),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [tdorange, Colors.deepOrange.shade400],
@@ -671,10 +673,9 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
           ),
           child: Text(
             widget.trip.label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+            style: Theme.of(context).textTheme.titleMedium!.copyWith(
               color: Colors.white,
+              fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
             ),
           ),
@@ -685,7 +686,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
 
   Widget _buildLocationInfo() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -718,7 +719,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
             child: const Icon(
               Icons.location_on_rounded,
               color: Colors.white,
-              size: 24,
+              size: 20,
             ),
           ),
           const SizedBox(width: 16),
@@ -726,10 +727,9 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "Location",
-                  style: TextStyle(
-                    fontSize: 14,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: Colors.grey,
                     fontWeight: FontWeight.w500,
                   ),
@@ -737,10 +737,9 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                 const SizedBox(height: 2),
                 Text(
                   widget.trip.name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
                     color: Colors.black87,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -765,7 +764,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
 
   Widget _buildDescriptionCard() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -795,12 +794,11 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 "About This Place",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                   color: Colors.black87,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -812,9 +810,8 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
               textAlign: TextAlign.justify,
               maxLines: maxLines,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 16,
-                height: 1.6,
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                height: 1.5,
                 color: Colors.black87,
                 letterSpacing: 0.2,
               ),
@@ -822,9 +819,8 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
             secondChild: Text(
               widget.trip.desk,
               textAlign: TextAlign.justify,
-              style: const TextStyle(
-                fontSize: 16,
-                height: 1.6,
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                height: 1.5,
                 color: Colors.black87,
                 letterSpacing: 0.2,
               ),
@@ -860,10 +856,9 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                     children: [
                       Text(
                         _isExpanded ? 'Show Less' : 'Read More',
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.labelLarge!.copyWith(
                           color: tdcyan,
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -886,7 +881,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
 
   Widget _buildCommentSection() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -916,12 +911,11 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 "Reviews & Comments",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                   color: Colors.black87,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -935,7 +929,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
 
   Widget _buildSuggestionCard() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -965,19 +959,18 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 "You Might Also Like",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                   color: Colors.black87,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
           SizedBox(
-            height: 220,
+            height: 180,
             child: Builder(
               builder: (context) {
                 final filteredTrips =
@@ -999,15 +992,16 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                         children: [
                           Icon(
                             Icons.explore_off_rounded,
-                            size: 64,
+                            size: 52,
                             color: Colors.grey[400],
                           ),
                           const SizedBox(height: 12),
                           Text(
                             "No suggestions available",
-                            style: TextStyle(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyLarge!.copyWith(
                               color: Colors.grey[600],
-                              fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1024,7 +1018,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                   itemBuilder: (context, index) {
                     final trip = filteredTrips[index];
                     return Container(
-                      width: 180,
+                      width: 160,
                       margin: EdgeInsets.only(
                         right: index == filteredTrips.length - 1 ? 0 : 16,
                       ),
@@ -1035,7 +1029,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
               },
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Enhanced Add to Destinations button
           Container(
@@ -1061,16 +1055,18 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
                 final trip = widget.trip;
                 showAddDestinationDialog(context, userId, trip);
               },
-              icon: const Icon(Icons.add_location_alt_rounded, size: 22),
-              label: const Text(
+              icon: const Icon(Icons.add_location_alt_rounded, size: 18),
+              label: Text(
                 "Add to My Destinations",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 foregroundColor: Colors.white,
                 shadowColor: Colors.transparent,
-                padding: const EdgeInsets.symmetric(vertical: 18),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),

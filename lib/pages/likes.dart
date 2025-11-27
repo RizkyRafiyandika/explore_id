@@ -4,6 +4,8 @@ import 'package:explore_id/services/likes_Service.dart';
 import 'package:explore_id/widget/customeToast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../provider/tripProvider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import '../models/listTrip.dart';
 
@@ -57,6 +59,10 @@ class _MyLikesPageState extends State<MyLikesPage> {
         likedTrips = trips;
         isLoading = false;
       });
+
+      // Mark as seen (clears new likes indicator)
+      final tripProvider = Provider.of<MytripProvider>(context, listen: false);
+      await tripProvider.markLikesSeen();
 
       print("✅ Total liked trips: ${trips.length}");
     } catch (e) {

@@ -1,0 +1,224 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    ADMIN MODULE ARCHITECTURE
+═══════════════════════════════════════════════════════════════════════════════
+
+                              USER INTERACTION
+                                    ↓
+                    ┌─────────────────────────────────┐
+                    │  AdminAddDestinationScreen      │
+                    │  (UI Layer - Assembly)          │
+                    └──────────────┬──────────────────┘
+                                   │
+                    ┌──────────────┴──────────────────┐
+                    │     Consumer<AdminProvider>     │
+                    │     (State Management)          │
+                    └──────────────┬──────────────────┘
+                                   │
+        ┌──────────────────────────┼──────────────────────────┐
+        │                          │                          │
+        ▼                          ▼                          ▼
+   ┌─────────────┐          ┌──────────────┐         ┌──────────────┐
+   │   Widgets   │          │   Provider   │         │   Location   │
+   │   Layer     │          │   Layer      │         │   Picker     │
+   └─────────────┘          └──────────────┘         └──────────────┘
+        │                          │                          │
+        │                          │                          │
+   ┌────┴──────────────────────────┼──────────────────────────┴─────┐
+   │                               │                                │
+   ▼                               ▼                                ▼
+┌──────────────────┐      ┌─────────────────┐        ┌──────────────────┐
+│  CustomTextField │      │  AdminProvider  │        │ LocationPicker   │
+│  CategorySelect  │      │                 │        │ Screen (Google   │
+│  LocationPicker  │      │ • Controllers   │        │ Maps)            │
+│  SubmitButton    │      │ • Form Validation        │                  │
+│                  │      │ • State Management       │ Returns: LatLng  │
+│ (Reusable UI)    │      │ • Business Logic        │                  │
+└────────┬─────────┘      └────────┬────────┘        └──────────────────┘
+         │                         │
+         │     ┌───────────────────┤
+         │     │                   │
+         └─────┼───────────────────┘
+               │
+               ▼
+        ┌─────────────────────┐
+        │ DestinationModel    │
+        │                     │
+        │ • id                │
+        │ • name              │
+        │ • daerah            │
+        │ • label             │
+        │ • harga             │
+        │ • latitude/long     │
+        │ • imagePath         │
+        │ • description       │
+        │                     │
+        │ Methods:            │
+        │ - toListTrip()      │
+        │ - toJson()          │
+        │ - fromJson()        │
+        │ - copyWith()        │
+        └──────────┬──────────┘
+                   │
+                   ▼
+        ┌──────────────────────┐
+        │   ListTrip (API)     │
+        │   Firebase Service   │
+        └──────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                        DATA FLOW DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════
+
+1. USER INPUT FLOW:
+   ┌────────────────────────────────────────────────────────────┐
+   │ User enters data in CustomTextField                        │
+   ↓                                                             ↓
+   └─→ TextEditingController in AdminProvider                   
+       (idController, nameController, etc.)                     
+   ↓                                                             ↓
+   └─→ Provider notifyListeners()                               
+   ↓                                                             ↓
+   └─→ UI rebuilds dengan Consumer<AdminProvider>              
+   ↓                                                             ↓
+   └─→ Text updated di CustomTextField                         
+
+2. CATEGORY SELECTION FLOW:
+   User taps CategorySelector
+   ↓
+   showModalBottomSheet opens
+   ↓
+   User selects category
+   ↓
+   onCategorySelected(category) callback triggered
+   ↓
+   adminProvider.setCategory(category)
+   ↓
+   labelController.text = category
+   ↓
+   notifyListeners() → UI rebuilds
+   ↓
+   Modal closes & selected category displayed
+
+3. LOCATION PICKER FLOW:
+   User taps Map icon in LocationPickerField
+   ↓
+   Navigator.push(LocationPickerScreen)
+   ↓
+   User selects location on Google Maps
+   ↓
+   Navigator.pop(result: LatLng)
+   ↓
+   adminProvider.setLocation(latLng)
+   ↓
+   latitudeController.text = lat.toString()
+   longitudeController.text = long.toString()
+   ↓
+   notifyListeners() → UI rebuilds
+   ↓
+   Coordinates displayed in LocationPickerField
+
+4. FORM SUBMISSION FLOW:
+   User taps SubmitButton
+   ↓
+   formKey.currentState.validate()
+   ↓
+   If valid:
+      adminProvider.submitDestination()
+      ↓
+      setLoading(true)
+      ↓
+      getFormData() → DestinationModel
+      ↓
+      .toListTrip() → ListTrip
+      ↓
+      addDestination(listTrip) → Firebase
+      ↓
+      resetForm()
+      ↓
+      setLoading(false)
+      ↓
+      Show success SnackBar
+      ↓
+      Navigator.pop()
+   ↓
+   If invalid:
+      Show validation errors
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                      COMPONENT RESPONSIBILITIES
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ AdminAddDestinationScreen (Screen)                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ RESPONSIBILITY:                                                             │
+│ • Assembly & Layout                                                         │
+│ • User interaction routing                                                  │
+│ • Navigation handling                                                       │
+│ • Error display (SnackBar)                                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ DEPENDENCIES:                                                               │
+│ • AdminProvider (via Consumer)                                              │
+│ • LocationPickerScreen                                                      │
+│ • All Admin Widgets                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ AdminProvider (State Management)                                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ RESPONSIBILITY:                                                             │
+│ • Form controller management                                                │
+│ • Form validation logic                                                     │
+│ • State (loading, etc.)                                                     │
+│ • Business logic (submitDestination)                                        │
+│ • Conversion to/from models                                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ DEPENDENCIES:                                                               │
+│ • destination_service.dart (addDestination)                                 │
+│ • DestinationModel                                                          │
+│ • ListTrip                                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Admin Widgets (UI Components)                                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ CustomTextField:                                                            │
+│  • Render labeled input field                                               │
+│  • Apply consistent styling                                                 │
+│                                                                             │
+│ CategorySelector:                                                           │
+│  • Display selected category                                                │
+│  • Show modal for selection                                                 │
+│  • Callback on selection                                                    │
+│                                                                             │
+│ LocationPickerField:                                                        │
+│  • Display lat/long fields                                                  │
+│  • Show map picker button                                                   │
+│  • Callback on button press                                                 │
+│                                                                             │
+│ SubmitButton:                                                               │
+│  • Render submit button                                                     │
+│  • Show loading indicator                                                   │
+│  • Disable when loading                                                     │
+│  • Callback on press                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DestinationModel (Data Model)                                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ RESPONSIBILITY:                                                             │
+│ • Data structure definition                                                 │
+│ • Model conversions                                                         │
+│ • Data validation (implicit)                                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ METHODS:                                                                    │
+│ • toListTrip() → Convert to ListTrip for API                                │
+│ • toJson() → Convert to JSON                                                │
+│ • fromJson() → Create from JSON                                             │
+│ • fromListTrip() → Create from ListTrip                                     │
+│ • copyWith() → Create copy with updates                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════

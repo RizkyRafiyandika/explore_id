@@ -10,6 +10,7 @@ class ListTrip {
   final double latitude; // tambahan
   final double longitude; // tambahan
   final double harga;
+  final String userId; // Added userId
 
   ListTrip({
     required this.id,
@@ -21,9 +22,14 @@ class ListTrip {
     required this.latitude, // tambahan
     required this.longitude, // tambahan
     required this.harga,
+    required this.userId,
   });
   // Factory method untuk parsing dari Firestore
   factory ListTrip.fromMap(Map<String, dynamic> data) {
+    final userId = data['userId'] as String?;
+    if (userId == null || userId.isEmpty) {
+      throw Exception('userId is required for ListTrip');
+    }
     return ListTrip(
       id: data['id'] ?? '',
       imagePath: data['imagePath'] ?? '',
@@ -34,6 +40,7 @@ class ListTrip {
       latitude: (data['latitude'] ?? 0).toDouble(),
       longitude: (data['longitude'] ?? 0).toDouble(),
       harga: (data['harga'] ?? 0).toDouble(),
+      userId: userId,
     );
   }
 

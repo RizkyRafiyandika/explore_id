@@ -1,0 +1,63 @@
+// ============================================
+// SETUP ADMIN PROVIDER DI MAIN.DART
+// ============================================
+
+// 1. Import AdminProvider
+import 'package:explore_id/provider/admin_provider.dart';
+
+// 2. Di dalam MultiProvider, tambahkan AdminProvider:
+/*
+MultiProvider(
+  providers: [
+    ChangeNotifierProvider(create: (context) => RoleProvider()),
+    ChangeNotifierProvider(create: (context) => UserProvider()),
+    ChangeNotifierProvider(create: (context) => TripProvider()),
+    // ✅ Tambahkan ini:
+    ChangeNotifierProvider(create: (context) => AdminProvider()),
+  ],
+  child: const MyApp(),
+)
+*/
+
+// ============================================
+// PENGGUNAAN DI SCREEN LAIN
+// ============================================
+
+// Option 1: Direct Provider Access
+/*
+final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+adminProvider.setCategory('Populer');
+*/
+
+// Option 2: Consumer Pattern (Recommended)
+/*
+Consumer<AdminProvider>(
+  builder: (context, adminProvider, _) {
+    return Text(adminProvider.labelController.text);
+  },
+)
+*/
+
+// Option 3: Selector untuk optimize rebuild
+/*
+Selector<AdminProvider, bool>(
+  selector: (_, provider) => provider.isLoading,
+  builder: (_, isLoading, __) {
+    return CircularProgressIndicator();
+  },
+)
+*/
+
+// ============================================
+// SCREEN NAVIGATION
+// ============================================
+
+/*
+// Di AdminDashboard atau screen lain:
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => const AdminAddDestinationScreen(),
+  ),
+);
+*/

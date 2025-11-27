@@ -9,10 +9,12 @@ class MyUserProvider with ChangeNotifier {
   String _username = "Guest1";
   String _email = "guest@example.com";
   File? _imageFile;
+  String? _profileImageUrl;
 
   String get username => _username;
   String get email => _email;
   File? get imageFile => _imageFile;
+  String? get profileImageUrl => _profileImageUrl;
 
   Future<void> fetchUserData() async {
     try {
@@ -25,8 +27,10 @@ class MyUserProvider with ChangeNotifier {
                 .get();
 
         if (userDoc.exists) {
-          _username = userDoc["username"];
-          _email = userDoc["email"];
+          final data = userDoc.data() as Map<String, dynamic>? ?? {};
+          _username = data["username"] ?? _username;
+          _email = data["email"] ?? _email;
+          _profileImageUrl = data["profileImage"] ?? _profileImageUrl;
           notifyListeners();
         }
       }
@@ -42,6 +46,7 @@ class MyUserProvider with ChangeNotifier {
     if (pickedFile != null) {
       _imageFile = File(pickedFile.path);
       notifyListeners();
+      await uploadImageToFirebase();
     }
   }
 
@@ -52,6 +57,7 @@ class MyUserProvider with ChangeNotifier {
     if (pickedImage != null) {
       _imageFile = File(pickedImage.path);
       notifyListeners();
+      await uploadImageToFirebase();
     }
   }
 
@@ -74,10 +80,14 @@ class MyUserProvider with ChangeNotifier {
       // Ambil URL download file
       String downloadUrl = await storageRef.getDownloadURL();
 
-      // Simpan URL ke Firestore (jika diperlukan)
+      // Simpan URL ke Firestore
       await FirebaseFirestore.instance.collection("users").doc(user.uid).update(
         {"profileImage": downloadUrl},
       );
+
+      // Update state dengan URL baru
+      _profileImageUrl = downloadUrl;
+      notifyListeners();
 
       return downloadUrl;
     } catch (e) {

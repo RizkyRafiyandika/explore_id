@@ -1,19 +1,22 @@
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/category.dart';
-import 'package:explore_id/pages/home/bottomSheet.dart';
 import 'package:explore_id/pages/likes.dart';
-import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:explore_id/pages/profile.dart';
+import 'package:explore_id/pages/browser.dart';
 import 'package:explore_id/pages/selectCategory.dart';
 import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/provider/tripProvider.dart';
 import 'package:explore_id/provider/userProvider.dart';
 import 'package:explore_id/widget/carousel.dart';
 import 'package:explore_id/widget/customeToast.dart';
-import 'package:explore_id/widget/listTripCard.dart';
+// listTripCard removed from home as search contains the full list
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:explore_id/models/event.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class MyHome extends StatefulWidget {
   const MyHome({super.key});
@@ -23,9 +26,10 @@ class MyHome extends StatefulWidget {
 }
 
 class _MyHomeState extends State<MyHome> {
-  TextEditingController searchController = TextEditingController();
+  bool isLoading = true;
+  List<Event> todaysEvents = [];
+  StreamSubscription<QuerySnapshot>? _homeEventsSub;
 
-  @override
   @override
   void initState() {
     super.initState();
@@ -37,15 +41,17 @@ class _MyHomeState extends State<MyHome> {
       userProvider.fetchUserData();
       tripProvider.fetchLikeStatus();
       await userProvider.fetchUserData();
-      await tripProvider
-          .loadTripsFromFirestore(); // Gantikan setTrips(ListTrips)
+      await Future.wait([
+        tripProvider.loadTripsFromFirestore(),
+        Future.delayed(Duration(seconds: 1)),
+      ]);
+      setState(() {
+        isLoading = false;
+      });
     });
 
-    // 🔍 Jalankan filter setiap kali search text berubah
-    searchController.addListener(() {
-      final tripProvider = Provider.of<MytripProvider>(context, listen: false);
-      tripProvider.runFilter(searchController.text);
-    });
+    // Setup events stream for today's activities
+    _setupHomeEventsStream();
   }
 
   Future<void> _handleRefresh() async {
@@ -56,15 +62,62 @@ class _MyHomeState extends State<MyHome> {
 
   @override
   void dispose() {
-    searchController.dispose();
+    _homeEventsSub?.cancel();
     super.dispose();
+  }
+
+  void _setupHomeEventsStream() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final userId = user.uid;
+
+    _homeEventsSub = FirebaseFirestore.instance
+        .collection('events')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            final List<Event> events =
+                snapshot.docs.map((doc) {
+                  final data = doc.data();
+                  return Event(
+                    id: data['id'],
+                    title: data['title'],
+                    desk: data['desk'] ?? '',
+                    date: (data['date'] as Timestamp).toDate(),
+                    start: data['start'] ?? '',
+                    end: data['end'] ?? '',
+                    place: data['place'] ?? '',
+                    label: data['label'] ?? '',
+                    docId: doc.id,
+                    isCheck: data['isCheck'] is bool ? data['isCheck'] : false,
+                  );
+                }).toList();
+
+            final today = DateTime.now();
+            final dateOnly = DateTime(today.year, today.month, today.day);
+            final filtered =
+                events.where((e) {
+                  final d = DateTime(e.date.year, e.date.month, e.date.day);
+                  return d == dateOnly;
+                }).toList();
+
+            if (mounted) {
+              setState(() {
+                todaysEvents = filtered;
+              });
+            }
+          },
+          onError: (e) {
+            print('Error fetching home events: $e');
+          },
+        );
   }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<MyUserProvider>(context);
-    final tripProvider = Provider.of<MytripProvider>(context);
-    final trips = tripProvider.filteredTrip;
+    // Use provider where necessary via Consumer; trips are shown in search and browser pages
     final user = FirebaseAuth.instance.currentUser;
 
     // Cek apakah user tidak login atau login anonim
@@ -83,24 +136,19 @@ class _MyHomeState extends State<MyHome> {
           physics: AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              ListExplore(),
-              _SearchBar(context, searchController),
+              // Carousel skeleton
+              Skeletonizer(enabled: isLoading, child: ListExplore()),
+              // Search bar skeleton
+              Skeletonizer(enabled: isLoading, child: _SearchBar(context)),
               SizedBox(height: 20),
-              _ListCategory(),
-              _title_ListTrip(),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-
-                itemCount: trips.length,
-                itemBuilder: (context, index) {
-                  return TripCardGridItem(trip: trips[index]);
-                },
+              // Category skeleton
+              Skeletonizer(enabled: isLoading, child: _ListCategory()),
+              // Title skeleton
+              Skeletonizer(enabled: isLoading, child: _title_ListTrip()),
+              // Today's Activity
+              Skeletonizer(
+                enabled: isLoading,
+                child: _todayActivitySection(todaysEvents: todaysEvents),
               ),
               SizedBox(height: 50),
             ],
@@ -109,6 +157,184 @@ class _MyHomeState extends State<MyHome> {
       ),
     );
   }
+}
+
+// -------------------- Today's Activity Section --------------------
+Widget _todayActivitySection({required List<Event> todaysEvents}) {
+  final total = todaysEvents.length;
+  final completed = todaysEvents.where((e) => e.isCheck).length;
+
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 20),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [tdcyan.withOpacity(0.1), tdcyan.withOpacity(0.05)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: tdcyan.withOpacity(0.2)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: tdcyan,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.event, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Today Activity',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      total > 0
+                          ? '$completed of $total completed'
+                          : 'No events today',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (total > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        completed == total ? const Color(0xFF10B981) : tdcyan,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${((completed / total) * 100).round()}%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        // List
+        todaysEvents.isEmpty
+            ? Container(
+              height: 120,
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.event_busy, size: 48, color: Colors.grey.shade300),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'No activities for today',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+            : ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: todaysEvents.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final e = todaysEvents[index];
+                return _buildHomeEventCard(e);
+              },
+            ),
+      ],
+    ),
+  );
+}
+
+Widget _buildHomeEventCard(Event e) {
+  Color labelColor;
+  switch (e.label.toLowerCase()) {
+    case 'work':
+      labelColor = const Color(0xFF6366F1);
+      break;
+    case 'personal':
+      labelColor = const Color(0xFF10B981);
+      break;
+    case 'travel':
+      labelColor = const Color(0xFFF59E0B);
+      break;
+    case 'health':
+      labelColor = const Color(0xFFEF4444);
+      break;
+    default:
+      labelColor = tdcyan;
+  }
+
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: ListTile(
+      contentPadding: const EdgeInsets.all(12),
+      leading: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: labelColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.place, color: labelColor, size: 22),
+      ),
+      title: Text(
+        e.place,
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          color: e.isCheck ? Colors.black54 : Colors.black,
+        ),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 4),
+          Text(e.title, style: const TextStyle(fontSize: 13)),
+          const SizedBox(height: 2),
+          Text(
+            '${e.start} - ${e.end}',
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+        ],
+      ),
+      trailing:
+          e.isCheck ? Icon(Icons.check_circle, color: Colors.green) : null,
+    ),
+  );
 }
 
 Widget _ListCategory() {
@@ -262,7 +488,7 @@ Widget _ListCategory() {
   );
 }
 
-Container _SearchBar(BuildContext context, searchController) {
+Container _SearchBar(BuildContext context) {
   return Container(
     margin: const EdgeInsets.only(top: 16, left: 30, right: 30),
     decoration: BoxDecoration(
@@ -277,42 +503,44 @@ Container _SearchBar(BuildContext context, searchController) {
     child: Row(
       children: [
         Expanded(
-          child: TextField(
-            controller: searchController,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
-              hintText: "Search your destination here...",
-              hintStyle: const TextStyle(
-                color: Color.fromARGB(255, 186, 186, 186),
-                fontSize: 14,
-              ),
-              prefixIcon: const Icon(Icons.search, color: Colors.grey),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide.none,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MyBrowser()),
+              );
+            },
+            child: TextField(
+              enabled: false,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                hintText: "Search your destination here...",
+                hintStyle: const TextStyle(
+                  color: Color.fromARGB(255, 186, 186, 186),
+                  fontSize: 14,
+                ),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
         ),
         Container(
-          margin: const EdgeInsets.only(
-            left: 10,
-          ), // Menambahkan jarak antara TextField dan IconButton
+          margin: const EdgeInsets.only(left: 10),
           decoration: BoxDecoration(
             color: tdcyan,
             borderRadius: BorderRadius.circular(15),
           ),
           child: IconButton(
             onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: tdwhitepure,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (context) => const showSheetBottom(),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MyBrowser()),
               );
             },
             icon: const Icon(Icons.filter_list, color: Colors.white),
@@ -325,6 +553,7 @@ Container _SearchBar(BuildContext context, searchController) {
 
 AppBar _MyAppBar(BuildContext context, String username, User? user) {
   return AppBar(
+    automaticallyImplyLeading: false,
     backgroundColor: Colors.transparent,
     elevation: 0,
     title: Row(
@@ -404,27 +633,34 @@ AppBar _MyAppBar(BuildContext context, String username, User? user) {
                   MaterialPageRoute(builder: (context) => MyLikesPage()),
                 );
               },
-              child: Stack(
-                children: [
-                  Icon(
-                    Icons.favorite_border,
-                    weight: 30,
-                    color: Colors.black.withOpacity(0.6),
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
+              child: Consumer<MytripProvider>(
+                builder:
+                    (context, tripProvider, child) => Stack(
+                      children: [
+                        Icon(
+                          Icons.favorite_border,
+                          weight: 30,
+                          color: Colors.black.withOpacity(0.6),
+                        ),
+                        if (tripProvider.hasNewLikes)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                ],
               ),
             ),
       ],
@@ -441,7 +677,7 @@ class _title_ListTrip extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 20),
           child: Text(
-            "List Trip",
+            "Today's Activity",
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ),
@@ -454,9 +690,9 @@ class _title_ListTrip extends StatelessWidget {
                 "Silahkan login terlebih dahulu untuk melihat semua trip",
               );
             } else {
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => MyNearbyPage()),
+                MaterialPageRoute(builder: (context) => const MyBrowser()),
               );
             }
           },
