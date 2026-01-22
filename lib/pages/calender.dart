@@ -14,6 +14,8 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class MyCalendar extends StatefulWidget {
+  const MyCalendar({super.key});
+
   @override
   _MyCalendarState createState() => _MyCalendarState();
 }
@@ -650,45 +652,49 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
   }
 
   Widget _buildEmptyState() {
-    return Container(
-      padding: EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(40),
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(minHeight: 300),
+        padding: EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 20,
+              offset: Offset(0, 4),
             ),
-            child: Icon(Icons.event_busy, size: 40, color: Color(0xFF94A3B8)),
-          ),
-          SizedBox(height: 16),
-          Text(
-            "No events today",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1E293B),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Icon(Icons.event_busy, size: 40, color: Color(0xFF94A3B8)),
             ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            "Enjoy your free day!",
-            style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-          ),
-        ],
+            SizedBox(height: 16),
+            Text(
+              "No events today",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Enjoy your free day!",
+              style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+            ),
+          ],
+        ),
       ),
     );
   }

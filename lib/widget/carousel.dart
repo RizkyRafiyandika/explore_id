@@ -5,6 +5,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:provider/provider.dart';
 
 class ListExplore extends StatefulWidget {
+  const ListExplore({super.key});
+
   @override
   _ListExploreState createState() => _ListExploreState();
 }

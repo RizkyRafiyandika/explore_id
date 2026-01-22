@@ -8,11 +8,11 @@ class RouteSummaryCard extends StatelessWidget {
   final double durationMin;
 
   const RouteSummaryCard({
-    Key? key,
+    super.key,
     required this.isBuildingRoute,
     required this.distanceKm,
     required this.durationMin,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

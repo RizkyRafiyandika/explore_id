@@ -1,5 +1,4 @@
 import 'package:explore_id/colors/color.dart';
-import 'package:explore_id/models/destination_model.dart';
 import 'package:explore_id/pages/admin/admin_add_destination_screen.dart';
 import 'package:explore_id/provider/admin_provider.dart';
 import 'package:flutter/material.dart';

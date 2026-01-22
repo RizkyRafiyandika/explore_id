@@ -134,7 +134,7 @@ class _TripCardGridItemState extends State<TripCardGridItem>
               ),
               Align(
                 alignment: Alignment.bottomCenter,
-                child: Container(
+                child: SizedBox(
                   height: 100,
                   width: double.infinity,
                   child: Column(

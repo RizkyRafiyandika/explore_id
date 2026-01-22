@@ -13,14 +13,14 @@ class UnifiedSearchBarWidget extends StatefulWidget {
   final VoidCallback onAddPressed;
 
   const UnifiedSearchBarWidget({
-    Key? key,
+    super.key,
     required this.controller,
     required this.isSearching,
     required this.suggestionNotifier,
     required this.onChanged,
     required this.onSuggestionSelected,
     required this.onAddPressed,
-  }) : super(key: key);
+  });
 
   @override
   State<UnifiedSearchBarWidget> createState() => _UnifiedSearchBarWidgetState();
@@ -288,14 +288,14 @@ class SearchBarWidget extends StatefulWidget {
   final VoidCallback onAddPressed;
 
   const SearchBarWidget({
-    Key? key,
+    super.key,
     required this.controller,
     required this.isSearching,
     required this.suggestionNotifier,
     required this.onChanged,
     required this.onSuggestionSelected,
     required this.onAddPressed,
-  }) : super(key: key);
+  });
 
   @override
   State<SearchBarWidget> createState() => _SearchBarWidgetState();
@@ -403,11 +403,11 @@ class SearchSuggestionsDropdown extends StatelessWidget {
   final TextEditingController controller;
 
   const SearchSuggestionsDropdown({
-    Key? key,
+    super.key,
     required this.notifier,
     required this.onSuggestionSelected,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

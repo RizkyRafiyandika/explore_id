@@ -63,7 +63,7 @@ class _MyBrowserState extends State<MyBrowser> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Container(
+        title: SizedBox(
           height: 50,
           child: Row(
             children: [

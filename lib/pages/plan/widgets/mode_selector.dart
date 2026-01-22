@@ -8,11 +8,11 @@ class ModeSelector extends StatelessWidget {
   final bool disabled;
 
   const ModeSelector({
-    Key? key,
+    super.key,
     required this.selectedMode,
     required this.onModeChanged,
     this.disabled = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

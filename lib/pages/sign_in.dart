@@ -25,7 +25,6 @@ class _MySignInState extends State<MySignIn> {
   // Sign In Controllers
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool isChecked = false;
 
   // Sign Up Controllers
   final _formKeySignUp = GlobalKey<FormState>();
@@ -36,7 +35,6 @@ class _MySignInState extends State<MySignIn> {
       TextEditingController();
   final TextEditingController _confirmPasswordSignUpController =
       TextEditingController();
-  bool isCheckedSignUp = false;
 
   @override
   void initState() {
@@ -358,49 +356,7 @@ class _MySignInState extends State<MySignIn> {
             "Password",
             obscureText: true,
           ),
-          SizedBox(height: 10),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 15),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Checkbox(
-                      value: isChecked,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          isChecked = value ?? false;
-                        });
-                      },
-                      activeColor: Colors.white,
-                      checkColor: Colors.black,
-                      side: BorderSide(color: Colors.white),
-                    ),
-                    Text(
-                      "Remember Me",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ],
-                ),
-                Flexible(
-                  child: TextButton(
-                    onPressed: () {},
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    child: Text(
-                      "Forgot Password?",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 20),
+          SizedBox(height: 30),
           ElevatedButton(
             onPressed: signIn,
             style: ElevatedButton.styleFrom(
@@ -463,22 +419,7 @@ class _MySignInState extends State<MySignIn> {
               "Confirm Your Password",
               obscureText: true,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Checkbox(
-                  value: isCheckedSignUp,
-                  onChanged: (bool? value) {
-                    setState(() => isCheckedSignUp = value ?? false);
-                  },
-                  activeColor: Colors.white,
-                  checkColor: Colors.black,
-                  side: BorderSide(color: Colors.white),
-                ),
-                Text("Remember Me", style: TextStyle(color: Colors.white)),
-              ],
-            ),
-            SizedBox(height: 20),
+            SizedBox(height: 30),
             ElevatedButton(
               onPressed: signUp,
               style: ElevatedButton.styleFrom(

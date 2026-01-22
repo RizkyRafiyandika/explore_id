@@ -11,13 +11,13 @@ class AnimatedPolylineLayer extends StatefulWidget {
   final VoidCallback? onAnimationComplete;
 
   const AnimatedPolylineLayer({
-    Key? key,
+    super.key,
     required this.points,
     this.color = Colors.blue,
     this.strokeWidth = 5.0,
     this.duration = const Duration(milliseconds: 1500),
     this.onAnimationComplete,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedPolylineLayer> createState() => _AnimatedPolylineLayerState();

@@ -148,8 +148,9 @@ class _AdminAddDestinationScreenState extends State<AdminAddDestinationScreen> {
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value!.isEmpty) return 'Harga tidak boleh kosong';
-                      if (double.tryParse(value) == null)
+                      if (double.tryParse(value) == null) {
                         return 'Harga harus berupa angka';
+                      }
                       return null;
                     },
                   ),

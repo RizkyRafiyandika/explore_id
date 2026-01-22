@@ -72,6 +72,6 @@ Future<void> addDestination(ListTrip trip) async {
     print("✅ Destination added: ${trip.name}");
   } catch (e) {
     print("❌ Failed to add destination: $e");
-    throw e;
+    rethrow;
   }
 }

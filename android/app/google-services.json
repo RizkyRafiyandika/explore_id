@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "90951538094",
+    "firebase_url": "https://explore-id-7b81e-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "explore-id-7b81e",
     "storage_bucket": "explore-id-7b81e.firebasestorage.app"
   },
@@ -12,7 +13,28 @@
           "package_name": "com.example.explore_id"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "90951538094-9ph69i6kcc2s98nuqf3j7n1gmss3u0pl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.explore_id",
+            "certificate_hash": "8cc280988f151b60ed6b384d718191ab159f705a"
+          }
+        },
+        {
+          "client_id": "90951538094-q2s00ejpaacr8tpo09j68tt91e172sd5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.explore_id",
+            "certificate_hash": "4749a3a1cd6c153a06d1594159b1b067e15558f6"
+          }
+        },
+        {
+          "client_id": "90951538094-fpvum0krmt96fun2cjpougfu5hb8f3p4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyARoym-T2hcYqZ2AoiT3v1y2tD2VUbxpHs"
@@ -20,7 +42,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "90951538094-fpvum0krmt96fun2cjpougfu5hb8f3p4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "90951538094-3k2vqgcid67ppn0sqdgkg7vmg9rkersi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.exploreId"
+              }
+            }
+          ]
         }
       }
     }

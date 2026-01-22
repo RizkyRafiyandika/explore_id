@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class MySettingPage extends StatefulWidget {
-  MySettingPage({super.key});
+  const MySettingPage({super.key});
 
   @override
   State<MySettingPage> createState() => _MySettingPageState();

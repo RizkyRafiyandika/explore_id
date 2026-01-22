@@ -130,7 +130,7 @@ class GraphHopperService {
     }
   }
 
-  /// Search for location coordinates using Nominatim geocoding
+  /// Search for location coordinates using GraphHopper Geocoding API
   /// Returns a map with 'name' and 'latlng' or null if not found
   ///
   /// [query] - Search query (e.g., "Monas, Jakarta")
@@ -139,10 +139,15 @@ class GraphHopperService {
 
     try {
       final url = Uri.parse(
-        'https://nominatim.openstreetmap.org/search'
+        '$cloudBaseUrl/geocode'
         '?q=${Uri.encodeComponent(query)}'
-        '&format=json&limit=1&countrycodes=id',
+        '&locale=id'
+        '&limit=1'
+        '&key=$cloudApiKey',
       );
+
+      print('🔍 Searching location: "$query"');
+      print('📍 URL: ${_sanitizeUrlForLogging(url.toString())}');
 
       final response = await http.get(
         url,
@@ -150,20 +155,19 @@ class GraphHopperService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        if (data.isNotEmpty) {
-          final lat = double.tryParse(data[0]['lat'].toString());
-          final lon = double.tryParse(data[0]['lon'].toString());
+        final data = jsonDecode(response.body);
+        if (data['hits'] != null && data['hits'].isNotEmpty) {
+          final hit = data['hits'][0];
+          final point = hit['point'];
 
-          if (lat == null || lon == null) {
-            throw Exception('Invalid coordinate format from server');
-          }
+          final name = hit['name'] ?? query;
+          final latlng = LatLng(point['lat'], point['lng']);
 
-          final displayName =
-              (data[0]['display_name'] as String?)?.split(',').first.trim() ??
-              query;
+          print('✅ Found: $name at (${point['lat']}, ${point['lng']})');
 
-          return {'name': displayName, 'latlng': LatLng(lat, lon)};
+          return {'name': name, 'latlng': latlng};
+        } else {
+          print('❌ No results found for: "$query"');
         }
       } else if (response.statusCode == 429) {
         throw Exception('Too many requests. Please try again later.');
@@ -178,7 +182,7 @@ class GraphHopperService {
     return null;
   }
 
-  /// Search for multiple location suggestions using Nominatim geocoding
+  /// Search for multiple location suggestions using GraphHopper Geocoding API
   /// Returns a list of suggestions with full details
   ///
   /// [query] - Search query (e.g., "Monas, Jakarta")
@@ -191,9 +195,11 @@ class GraphHopperService {
 
     try {
       final url = Uri.parse(
-        'https://nominatim.openstreetmap.org/search'
+        '$cloudBaseUrl/geocode'
         '?q=${Uri.encodeComponent(query)}'
-        '&format=json&limit=$limit&countrycodes=id&addressdetails=1',
+        '&locale=id'
+        '&limit=$limit'
+        '&key=$cloudApiKey',
       );
 
       print('🔍 Searching suggestions for: "$query"');
@@ -205,38 +211,35 @@ class GraphHopperService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        if (data.isNotEmpty) {
+        final data = jsonDecode(response.body);
+        if (data['hits'] != null && data['hits'].isNotEmpty) {
           final suggestions = <Map<String, dynamic>>[];
 
-          for (var item in data) {
+          for (var hit in data['hits']) {
             try {
-              final lat = double.tryParse(item['lat'].toString());
-              final lon = double.tryParse(item['lon'].toString());
+              final point = hit['point'];
+              final lat = point['lat'] as double?;
+              final lng = point['lng'] as double?;
 
-              if (lat == null || lon == null) continue;
-
-              final displayName = (item['display_name'] as String?) ?? query;
-              final address =
-                  displayName.split(',').length > 1
-                      ? displayName.split(',').sublist(0, 2).join(',').trim()
-                      : displayName;
+              if (lat == null || lng == null) continue;
 
               suggestions.add({
-                'id': item['place_id'].toString(),
-                'name': displayName.split(',').first.trim(),
-                'fullAddress': address,
+                'id': hit['osm_id']?.toString() ?? '',
+                'name': hit['name'] ?? query,
+                'fullAddress': _formatAddress(hit),
                 'latitude': lat,
-                'longitude': lon,
+                'longitude': lng,
               });
             } catch (e) {
-              print('⚠️ Error parsing suggestion item: $e');
+              print('⚠️ Error parsing suggestion: $e');
               continue;
             }
           }
 
           print('✅ Found ${suggestions.length} suggestions');
           return suggestions.isNotEmpty ? suggestions : null;
+        } else {
+          print('❌ No suggestions found for: "$query"');
         }
       } else if (response.statusCode == 429) {
         throw Exception('Too many requests. Please try again later.');
@@ -244,7 +247,7 @@ class GraphHopperService {
         throw Exception('Search failed (code: ${response.statusCode})');
       }
     } catch (e) {
-      print('❌ Error searching location suggestions: $e');
+      print('❌ Error searching suggestions: $e');
       rethrow;
     }
 
@@ -265,6 +268,21 @@ class GraphHopperService {
       default:
         return 'car';
     }
+  }
+
+  /// Format address from GraphHopper geocoding response
+  static String _formatAddress(Map<String, dynamic> hit) {
+    final parts = <String>[];
+
+    if (hit['name'] != null) parts.add(hit['name']);
+    if (hit['city'] != null)
+      parts.add(hit['city']);
+    else if (hit['state'] != null)
+      parts.add(hit['state']);
+    else if (hit['country'] != null)
+      parts.add(hit['country']);
+
+    return parts.take(2).join(', ');
   }
 
   /// Sanitize URL for logging (hide API key)

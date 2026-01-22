@@ -1,5 +1,5 @@
 import 'package:explore_id/pages/plan/providers/plan_provider.dart';
-import 'package:explore_id/pages/welcome.dart';
+import 'package:explore_id/services/auth_wrapper.dart';
 import 'package:explore_id/provider/tripProvider.dart';
 import 'package:explore_id/provider/userProvider.dart';
 import 'package:explore_id/provider/role_provider.dart';
@@ -79,7 +79,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        home: WelcomePage(),
+        home: AuthWrapper(),
       ),
     );
   }

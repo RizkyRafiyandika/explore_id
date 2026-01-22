@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/provider/tripProvider.dart';

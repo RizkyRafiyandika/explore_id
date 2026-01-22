@@ -8,7 +8,7 @@ Future<void> addComment(String placeId, String commentText) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return;
 
-  final commentDocId = '${placeId}_${commentText}';
+  final commentDocId = '${placeId}_$commentText';
   final commentRef = FirebaseFirestore.instance
       .collection('comments')
       .doc(commentDocId);
@@ -55,9 +55,7 @@ List<Comment> sortComments(List<Comment> comments) {
     } else if (a.userId != currentUserId && b.userId == currentUserId) {
       return 1; // b di atas
     } else {
-      return b.timestamp.compareTo(
-        a.timestamp,
-      );
+      return b.timestamp.compareTo(a.timestamp);
     }
   });
 

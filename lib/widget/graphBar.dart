@@ -236,6 +236,8 @@ class _MyGraphBarState extends State<MyGraphBar> with TickerProviderStateMixin {
     if (value.toInt() >= 0 && value.toInt() < months.length) {
       final isSelected = touchedIndex == value.toInt();
       return SideTitleWidget(
+        space: 8,
+        meta: meta,
         child: Text(
           months[value.toInt()],
           style: TextStyle(
@@ -244,8 +246,6 @@ class _MyGraphBarState extends State<MyGraphBar> with TickerProviderStateMixin {
             color: isSelected ? const Color(0xFF6C63FF) : Colors.grey.shade600,
           ),
         ),
-        space: 8,
-        meta: meta,
       );
     }
     return const SizedBox.shrink();
@@ -253,6 +253,8 @@ class _MyGraphBarState extends State<MyGraphBar> with TickerProviderStateMixin {
 
   Widget getLeftTitles(double value, TitleMeta meta) {
     return SideTitleWidget(
+      space: 8,
+      meta: meta,
       child: Text(
         value.toInt().toString(),
         style: TextStyle(
@@ -261,8 +263,6 @@ class _MyGraphBarState extends State<MyGraphBar> with TickerProviderStateMixin {
           color: Colors.grey.shade600,
         ),
       ),
-      space: 8,
-      meta: meta,
     );
   }
 }

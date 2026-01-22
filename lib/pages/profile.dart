@@ -405,7 +405,7 @@ class _MyProfileState extends State<MyProfile>
           const SizedBox(height: 20),
 
           if (isLoading)
-            Container(
+            SizedBox(
               height: 200,
               child: const Center(child: CircularProgressIndicator()),
             )

@@ -18,7 +18,7 @@ import '../widgets/animated_polyline.dart';
 
 /// Main screen for route planning feature
 class PlanScreen extends StatefulWidget {
-  const PlanScreen({Key? key}) : super(key: key);
+  const PlanScreen({super.key});
 
   @override
   State<PlanScreen> createState() => _PlanScreenState();
@@ -267,10 +267,14 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
                   onTap: () async {
                     await provider.getCurrentLocation();
                     if (provider.currentLocation != null) {
-                      _mapController.move(
-                        provider.currentLocation!,
-                        _mapController.camera.zoom,
-                      );
+                      // Safe zoom level - prevent Infinity/NaN crash
+                      final currentZoom = _mapController.camera.zoom;
+                      final safeZoom =
+                          (currentZoom.isFinite && currentZoom > 0)
+                              ? currentZoom
+                              : 15.0;
+
+                      _mapController.move(provider.currentLocation!, safeZoom);
                     }
                   },
                   isLoading: provider.isLoadingLocation,
