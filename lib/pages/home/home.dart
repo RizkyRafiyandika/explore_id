@@ -1,8 +1,10 @@
 import 'package:explore_id/colors/color.dart';
+import 'package:explore_id/components/custome_Bottom_submit.dart';
 import 'package:explore_id/models/category.dart';
 import 'package:explore_id/pages/likes.dart';
 import 'package:explore_id/pages/profile.dart';
 import 'package:explore_id/pages/browser.dart';
+import 'package:explore_id/pages/plan_helper/plan_helper.dart';
 import 'package:explore_id/pages/selectCategory.dart';
 import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/provider/tripProvider.dart';
@@ -143,8 +145,22 @@ class _MyHomeState extends State<MyHome> {
               SizedBox(height: 20),
               // Category skeleton
               Skeletonizer(enabled: isLoading, child: _ListCategory()),
-              // Title skeleton
-              Skeletonizer(enabled: isLoading, child: _title_ListTrip()),
+
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: CustomButtonSubmit(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PlanHelper(),
+                      ),
+                    );
+                  },
+                  label: "Kami Bantu Rencanakan Perjalanan Anda",
+                ),
+              ),
+
               // Today's Activity
               Skeletonizer(
                 enabled: isLoading,
