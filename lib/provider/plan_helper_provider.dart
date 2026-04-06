@@ -10,8 +10,10 @@ class PlanHelperProvider extends ChangeNotifier {
   final Set<String> _selectedPrices = {};
   final Set<String> _excludedPrices = {};
 
-  Set<String> get selectedCategories => UnmodifiableSetView(_selectedCategories);
-  Set<String> get excludedCategories => UnmodifiableSetView(_excludedCategories);
+  Set<String> get selectedCategories =>
+      UnmodifiableSetView(_selectedCategories);
+  Set<String> get excludedCategories =>
+      UnmodifiableSetView(_excludedCategories);
   Set<String> get selectedPrices => UnmodifiableSetView(_selectedPrices);
   Set<String> get excludedPrices => UnmodifiableSetView(_excludedPrices);
 

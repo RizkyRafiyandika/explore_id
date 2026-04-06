@@ -21,10 +21,8 @@ const List<String> planHelperCategoryOptions = [
 List<PlanPreferenceCardData> buildPlanHelperSwipeCards() {
   return [
     ...planHelperCategoryOptions.map(
-      (label) => PlanPreferenceCardData(
-        type: PlanPreferenceType.category,
-        key: label,
-      ),
+      (label) =>
+          PlanPreferenceCardData(type: PlanPreferenceType.category, key: label),
     ),
     const PlanPreferenceCardData(type: PlanPreferenceType.price, key: 'budget'),
     const PlanPreferenceCardData(
@@ -60,9 +58,10 @@ List<ListTrip> applyPlanHelperPreferenceFilter({
     result =
         result
             .where(
-              (trip) => !excludedPrices.any(
-                (range) => matchesPriceRange(range, trip.harga),
-              ),
+              (trip) =>
+                  !excludedPrices.any(
+                    (range) => matchesPriceRange(range, trip.harga),
+                  ),
             )
             .toList();
   }
