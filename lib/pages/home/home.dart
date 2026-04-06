@@ -142,12 +142,12 @@ class _MyHomeState extends State<MyHome> {
               Skeletonizer(enabled: isLoading, child: ListExplore()),
               // Search bar skeleton
               Skeletonizer(enabled: isLoading, child: _SearchBar(context)),
-              SizedBox(height: 20),
+              SizedBox(height: 24),
               // Category skeleton
               Skeletonizer(enabled: isLoading, child: _ListCategory()),
 
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.all(24),
                 child: CustomButtonSubmit(
                   onPressed: () {
                     Navigator.push(
@@ -158,6 +158,7 @@ class _MyHomeState extends State<MyHome> {
                     );
                   },
                   label: "Kami Bantu Rencanakan Perjalanan Anda",
+                  backgroundColor: tdcyan,
                 ),
               ),
 
@@ -181,7 +182,7 @@ Widget _todayActivitySection({required List<Event> todaysEvents}) {
   final completed = todaysEvents.where((e) => e.isCheck).length;
 
   return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 20),
+    margin: const EdgeInsets.symmetric(horizontal: 24),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -1,4 +1,5 @@
 import 'package:explore_id/pages/plan/providers/plan_provider.dart';
+import 'package:explore_id/provider/plan_helper_provider.dart';
 import 'package:explore_id/services/auth_wrapper.dart';
 import 'package:explore_id/provider/tripProvider.dart';
 import 'package:explore_id/provider/userProvider.dart';
@@ -51,6 +52,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => MyUserProvider()),
         ChangeNotifierProvider(create: (_) => MytripProvider()),
+        ChangeNotifierProvider(create: (_) => PlanHelperProvider()),
         ChangeNotifierProvider(create: (_) => PlanProvider()),
         ChangeNotifierProvider(create: (_) => RoleProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),

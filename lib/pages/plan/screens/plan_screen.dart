@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
@@ -10,6 +9,7 @@ import 'package:explore_id/widget/customeToast.dart';
 
 import '../providers/plan_provider.dart';
 import '../providers/search_suggestion_notifier.dart';
+import '../services/plan_marker_factory.dart';
 import '../widgets/route_summary_card.dart';
 import '../widgets/destination_list_item.dart';
 import '../widgets/search_bar_widget.dart';
@@ -32,6 +32,7 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   Animation<double>? _fadeAnimation;
   Animation<Offset>? _slideAnimation;
+  final PlanMarkerFactory _markerFactory = PlanMarkerFactory.instance;
 
   @override
   void initState() {
@@ -56,6 +57,8 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
 
+    _initializeMarkerFactory();
+
     // Initialize provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<PlanProvider>();
@@ -64,6 +67,13 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
     });
 
     _animationController.forward();
+  }
+
+  Future<void> _initializeMarkerFactory() async {
+    await _markerFactory.ensureInitialized(markerSize: 160);
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -153,61 +163,31 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
                   userAgentPackageName: 'com.exploreid.app',
                   retinaMode: true,
                 ),
-                const CurrentLocationLayer(),
-                if (provider.hasDestinations)
+                if (provider.currentLocation != null ||
+                    provider.hasDestinations)
                   MarkerLayer(
                     markers: [
+                      // Custom marker for current location
+                      if (provider.currentLocation != null)
+                        Marker(
+                          point: provider.currentLocation!,
+                          width: 54,
+                          height: 54,
+                          child: _markerFactory.buildCurrentMarker(),
+                        ),
                       // Numbered markers for destinations
                       ...provider.destinations.asMap().entries.map((e) {
                         final idx = e.key;
                         final dest = e.value;
                         return Marker(
                           point: dest.latlng,
-                          width: 40,
-                          height: 40,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              const Icon(
-                                Icons.location_on,
-                                color: Colors.red,
-                                size: 36,
-                              ),
-                              Positioned(
-                                top: 9,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    '${idx + 1}',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          width: 46,
+                          height: 46,
+                          child: _markerFactory.buildDestinationMarker(
+                            index: idx,
                           ),
                         );
                       }),
-                      // Current location marker
-                      if (provider.currentLocation != null)
-                        Marker(
-                          point: provider.currentLocation!,
-                          width: 40,
-                          height: 40,
-                          child: const Icon(
-                            Icons.my_location,
-                            color: tdcyan,
-                            size: 28,
-                          ),
-                        ),
                     ],
                   ),
                 if (provider.hasRoute)

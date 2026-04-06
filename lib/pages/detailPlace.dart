@@ -1,4 +1,5 @@
 import 'package:explore_id/colors/color.dart';
+import 'package:explore_id/components/custome_Bottom_submit.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/provider/tripProvider.dart';
 import 'package:explore_id/widget/comment_sessioin.dart';
@@ -1030,46 +1031,15 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
           const SizedBox(height: 16),
 
           // Enhanced Add to Destinations button
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [tdcyan, tdcyan.withOpacity(0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: tdcyan.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                HapticFeedback.mediumImpact();
-                final trip = widget.trip;
-                showAddDestinationDialog(context, userId, trip);
-              },
-              icon: const Icon(Icons.add_location_alt_rounded, size: 18),
-              label: Text(
-                "Add to My Destinations",
-                style: Theme.of(
-                  context,
-                ).textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                shadowColor: Colors.transparent,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
+          CustomButtonSubmit(
+            label: "Add to Destinations",
+            backgroundColor: tdcyan,
+            textColor: Colors.white,
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              final trip = widget.trip;
+              showAddDestinationDialog(context, userId, trip);
+            },
           ),
         ],
       ),
