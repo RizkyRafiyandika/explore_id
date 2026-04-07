@@ -1,14 +1,20 @@
 import 'dart:collection';
-
+import 'package:explore_id/models/plan_option_model.dart';
+import 'package:explore_id/services/plan_helper_service.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/pages/plan_helper/plan_helper_logic.dart';
 import 'package:flutter/material.dart';
 
 class PlanHelperProvider extends ChangeNotifier {
+  final PlanHelperService _service = PlanHelperService();
+
   final Set<String> _selectedCategories = {};
   final Set<String> _excludedCategories = {};
   final Set<String> _selectedPrices = {};
   final Set<String> _excludedPrices = {};
+
+  List<PlanOption> _rawOptions = [];
+  bool _isLoading = false;
 
   Set<String> get selectedCategories =>
       UnmodifiableSetView(_selectedCategories);
@@ -17,7 +23,25 @@ class PlanHelperProvider extends ChangeNotifier {
   Set<String> get selectedPrices => UnmodifiableSetView(_selectedPrices);
   Set<String> get excludedPrices => UnmodifiableSetView(_excludedPrices);
 
-  List<PlanPreferenceCardData> get swipeCards => buildPlanHelperSwipeCards();
+  List<PlanPreferenceCardData> get swipeCards =>
+      buildPlanHelperSwipeCards(_rawOptions);
+
+  bool get isLoading => _isLoading;
+
+  /// Fetch plan options from Firestore
+  Future<void> fetchPlanOptions() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      _rawOptions = await _service.getPlanOptions();
+    } catch (e) {
+      debugPrint("❌ Error in fetchPlanOptions: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   void reset() {
     _selectedCategories.clear();

@@ -1,39 +1,38 @@
 import 'package:explore_id/models/listTrip.dart';
+import 'package:explore_id/models/plan_option_model.dart';
 
 enum PlanPreferenceType { category, price }
 
 class PlanPreferenceCardData {
   final PlanPreferenceType type;
   final String key;
+  final String? title; // Optional override for the display title
 
-  const PlanPreferenceCardData({required this.type, required this.key});
+  const PlanPreferenceCardData({
+    required this.type,
+    required this.key,
+    this.title,
+  });
+
+  // Factory to create from PlanOption model
+  factory PlanPreferenceCardData.fromModel(PlanOption model) {
+    return PlanPreferenceCardData(
+      type:
+          model.type == 'price'
+              ? PlanPreferenceType.price
+              : PlanPreferenceType.category,
+      key: model.key,
+      title: model.title,
+    );
+  }
 }
 
-const List<String> planHelperCategoryOptions = [
-  'Mountain',
-  'Culture',
-  'Nature',
-  'Culinary',
-  'Beach',
-  'Monument',
-];
-
-List<PlanPreferenceCardData> buildPlanHelperSwipeCards() {
-  return [
-    ...planHelperCategoryOptions.map(
-      (label) =>
-          PlanPreferenceCardData(type: PlanPreferenceType.category, key: label),
-    ),
-    const PlanPreferenceCardData(type: PlanPreferenceType.price, key: 'budget'),
-    const PlanPreferenceCardData(
-      type: PlanPreferenceType.price,
-      key: 'standard',
-    ),
-    const PlanPreferenceCardData(
-      type: PlanPreferenceType.price,
-      key: 'premium',
-    ),
-  ];
+/// Helper to convert a list of Firestore PlanOptions to the UI card format.
+List<PlanPreferenceCardData> buildPlanHelperSwipeCards(
+  List<PlanOption> options,
+) {
+  if (options.isEmpty) return [];
+  return options.map((opt) => PlanPreferenceCardData.fromModel(opt)).toList();
 }
 
 List<ListTrip> applyPlanHelperPreferenceFilter({
