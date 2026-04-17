@@ -22,7 +22,7 @@ class PlanMarkerFactory {
   bool get isReady =>
       _currentMarkerBytes != null && _destinationMarkerBytes != null;
 
-  Future<void> ensureInitialized({int markerSize = 40}) {
+  Future<void> ensureInitialized({int markerSize = 16}) {
     if (isReady) return Future.value();
     _initializing ??= _loadAllMarkers(markerSize);
     return _initializing!;
@@ -71,7 +71,7 @@ class PlanMarkerFactory {
     }
   }
 
-  Widget buildCurrentMarker({double width = 32, double height = 32}) {
+  Widget buildCurrentMarker({double width = 16, double height = 16}) {
     if (_currentMarkerBytes != null) {
       return Image.memory(
         _currentMarkerBytes!,
@@ -92,8 +92,8 @@ class PlanMarkerFactory {
 
   Widget buildDestinationMarker({
     required int index,
-    double width = 46,
-    double height = 46,
+    double width = 32,
+    double height = 32,
   }) {
     final markerImage =
         _destinationMarkerBytes != null
@@ -111,25 +111,43 @@ class PlanMarkerFactory {
               fit: BoxFit.contain,
             );
 
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        markerImage,
-        Positioned(
-          top: 10,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+    return SizedBox(
+      width:
+          width + 20, // Beri extra space agar tidak overflow secara horizontal
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
+              shape: BoxShape.circle, // Gunakan circle agar lebih compact
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Text(
-              '${index + 1}',
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(
+                '${index + 1}',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 2),
+          markerImage,
+        ],
+      ),
     );
   }
 }

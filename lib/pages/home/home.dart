@@ -158,7 +158,9 @@ class _MyHomeState extends State<MyHome> {
                     );
                   },
                   label: "Kami Bantu Rencanakan Perjalanan Anda",
-                  backgroundColor: tdcyan,
+                  backgroundColor: tdwhitepure,
+                  textColor: tdcyan,
+                  borderColor: tdcyan,
                 ),
               ),
 
@@ -384,7 +386,7 @@ Widget _ListCategory() {
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          backgroundColor: tdcyanwhite.withOpacity(0.9),
+                          backgroundColor: tdwhite,
                           title: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [

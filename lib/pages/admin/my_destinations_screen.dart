@@ -43,7 +43,10 @@ class _MyDestinationsScreenState extends State<MyDestinationsScreen> {
 
           if (provider.myDestinations.isEmpty) {
             return const Center(
-              child: Text('Belum ada destinasi yang ditambahkan.'),
+              child: Text(
+                'Belum ada destinasi yang ditambahkan.',
+                style: TextStyle(fontSize: 16),
+              ),
             );
           }
 

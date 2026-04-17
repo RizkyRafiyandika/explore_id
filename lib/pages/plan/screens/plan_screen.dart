@@ -171,8 +171,6 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
                       if (provider.currentLocation != null)
                         Marker(
                           point: provider.currentLocation!,
-                          width: 54,
-                          height: 54,
                           child: _markerFactory.buildCurrentMarker(),
                         ),
                       // Numbered markers for destinations
@@ -181,8 +179,11 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
                         final dest = e.value;
                         return Marker(
                           point: dest.latlng,
-                          width: 46,
-                          height: 46,
+                          width: 60,
+                          height: 80,
+                          alignment:
+                              Alignment
+                                  .topCenter, // Pastikan ikon menunjuk ke titik koordinat dengan benar
                           child: _markerFactory.buildDestinationMarker(
                             index: idx,
                           ),
@@ -429,8 +430,8 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  "Belum ada destinasi. Tambahkan lewat kotak pencarian di atas ✨",
-                  style: TextStyle(color: Colors.grey.shade700),
+                  "Belum ada destinasi. Tambahkan lewat kotak pencarian di atas",
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
                 ),
               ),
             ],
