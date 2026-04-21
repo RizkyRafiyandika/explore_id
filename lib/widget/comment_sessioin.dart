@@ -221,11 +221,10 @@ class _MyCommentSessionState extends State<MyCommentSession> {
           child: Row(
             children: [
               Container(
-                margin: EdgeInsets.all(8),
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    colors: [Colors.cyan, Colors.cyan[300]!],
                   ),
                   shape: BoxShape.circle,
                 ),
@@ -258,7 +257,7 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                   gradient:
                       _commentController.text.trim().isNotEmpty
                           ? LinearGradient(
-                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                            colors: [Colors.cyan, Colors.cyan[300]!],
                           )
                           : null,
                   color:
@@ -270,7 +269,7 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                 child:
                     _isSubmitting
                         ? Container(
-                          padding: EdgeInsets.all(12),
+                          padding: EdgeInsets.all(8),
                           child: SizedBox(
                             width: 20,
                             height: 20,
@@ -304,12 +303,11 @@ class _MyCommentSessionState extends State<MyCommentSession> {
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Container(
-                padding: EdgeInsets.all(32),
+                padding: EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min, // TAMBAHKAN INI
                   children: [
                     Container(
-                      padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.red[50],
                         shape: BoxShape.circle,
@@ -345,10 +343,9 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                   mainAxisSize: MainAxisSize.min, // TAMBAHKAN INI
                   children: [
                     Container(
-                      padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                          colors: [Colors.cyan, Colors.cyan[300]!],
                         ),
                         shape: BoxShape.circle,
                       ),
@@ -381,19 +378,18 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                   mainAxisSize: MainAxisSize.min, // TAMBAHKAN INI
                   children: [
                     Container(
-                      padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Color(0xFF6366F1).withOpacity(0.1),
-                            Color(0xFF8B5CF6).withOpacity(0.1),
+                            Colors.cyan.withOpacity(0.1),
+                            Colors.cyan[300]!.withOpacity(0.1),
                           ],
                         ),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.chat_bubble_outline_rounded,
-                        color: Color(0xFF6366F1),
+                        color: Colors.cyan,
                         size: 48,
                       ),
                     ),
@@ -427,7 +423,6 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                 ListView.separated(
                   shrinkWrap: true, // TAMBAHKAN INI
                   physics: NeverScrollableScrollPhysics(), // TAMBAHKAN INI
-                  padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
                   itemCount: displayedComments.length,
                   separatorBuilder: (context, index) => SizedBox(height: 12),
                   itemBuilder: (context, index) {
@@ -442,14 +437,14 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                         final username = usernameSnapshot.data ?? "Loading...";
 
                         return Container(
-                          padding: EdgeInsets.all(16),
+                          padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             gradient:
                                 isCurrentUser
                                     ? LinearGradient(
                                       colors: [
-                                        Color(0xFF6366F1).withOpacity(0.1),
-                                        Color(0xFF8B5CF6).withOpacity(0.05),
+                                        Colors.cyan.withOpacity(0.1),
+                                        Colors.cyan[300]!.withOpacity(0.05),
                                       ],
                                     )
                                     : null,
@@ -463,7 +458,7 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                             border:
                                 isCurrentUser
                                     ? Border.all(
-                                      color: Color(0xFF6366F1).withOpacity(0.3),
+                                      color: Colors.cyan.withOpacity(0.3),
                                       width: 1,
                                     )
                                     : null,
@@ -490,8 +485,8 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                                         colors:
                                             isCurrentUser
                                                 ? [
-                                                  Color(0xFF6366F1),
-                                                  Color(0xFF8B5CF6),
+                                                  Colors.cyan,
+                                                  Colors.cyan[300]!,
                                                 ]
                                                 : [
                                                   Colors.grey[400]!,
@@ -515,7 +510,7 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                                           style: TextStyle(
                                             color:
                                                 isCurrentUser
-                                                    ? Color(0xFF6366F1)
+                                                    ? Colors.cyan
                                                     : Colors.grey[600],
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
@@ -549,8 +544,8 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                                                 decoration: BoxDecoration(
                                                   gradient: LinearGradient(
                                                     colors: [
-                                                      Color(0xFF6366F1),
-                                                      Color(0xFF8B5CF6),
+                                                      Colors.cyan,
+                                                      Colors.cyan[300]!,
                                                     ],
                                                   ),
                                                   borderRadius:
@@ -569,47 +564,65 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                                           ],
                                         ),
                                         Text(
-                                          '2 mins ago', // You can implement time calculation
+                                          comment.commentText,
                                           style: TextStyle(
-                                            color: Colors.grey[500],
-                                            fontSize: 12,
+                                            fontSize: 14,
+                                            height: 1.5,
+                                            color:
+                                                isDark
+                                                    ? Colors.grey[200]
+                                                    : Colors.grey[800],
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
                                   if (isCurrentUser)
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.red[50],
-                                        shape: BoxShape.circle,
+                                    PopupMenuButton<String>(
+                                      icon: Icon(
+                                        Icons.more_vert_rounded,
+                                        color:
+                                            isDark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
+                                        size: 20,
                                       ),
-                                      child: IconButton(
-                                        icon: Icon(
-                                          Icons.delete_outline_rounded,
-                                          color: Colors.red[400],
-                                          size: 18,
-                                        ),
-                                        onPressed:
-                                            () => _deleteComment(comment.id),
-                                        tooltip: 'Delete comment',
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
+                                      offset: Offset(0, 40),
+                                      onSelected: (value) {
+                                        if (value == 'delete') {
+                                          _deleteComment(comment.id);
+                                        }
+                                      },
+                                      itemBuilder:
+                                          (context) => [
+                                            PopupMenuItem(
+                                              value: 'delete',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons
+                                                        .delete_outline_rounded,
+                                                    color: Colors.red[400],
+                                                    size: 20,
+                                                  ),
+                                                  SizedBox(width: 8),
+                                                  Text(
+                                                    'Hapus Komentar',
+                                                    style: TextStyle(
+                                                      color: Colors.red[400],
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                     ),
                                 ],
-                              ),
-
-                              SizedBox(height: 12),
-
-                              Text(
-                                comment.commentText,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  height: 1.5,
-                                  color:
-                                      isDark
-                                          ? Colors.grey[200]
-                                          : Colors.grey[800],
-                                ),
                               ),
                             ],
                           ),
@@ -634,19 +647,19 @@ class _MyCommentSessionState extends State<MyCommentSession> {
                         _showAllComments
                             ? Icons.keyboard_arrow_up_rounded
                             : Icons.keyboard_arrow_down_rounded,
-                        color: Color(0xFF6366F1),
+                        color: Colors.cyan,
                       ),
                       label: Text(
                         _showAllComments
                             ? 'Show Less'
                             : 'Show ${sortedComments.length - 3} More Comments',
                         style: TextStyle(
-                          color: Color(0xFF6366F1),
+                          color: Colors.cyan,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       style: TextButton.styleFrom(
-                        backgroundColor: Color(0xFF6366F1).withOpacity(0.1),
+                        backgroundColor: Colors.cyan.withOpacity(0.1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

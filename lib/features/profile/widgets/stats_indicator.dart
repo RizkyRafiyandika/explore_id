@@ -1,5 +1,5 @@
 import 'package:explore_id/colors/color.dart';
-import 'package:explore_id/models/dataChartTrip.dart';
+import 'package:explore_id/features/profile/models/data_chart_trip.dart';
 import 'package:explore_id/pages/nearby_List_Page.dart';
 import 'package:flutter/material.dart';
 

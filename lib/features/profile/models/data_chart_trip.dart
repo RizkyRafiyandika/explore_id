@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:explore_id/services/chart_count.dart'; // pastikan ini ada dan benar
+import 'package:explore_id/features/profile/services/chart_count_service.dart'; // pastikan ini ada dan benar
 
 // Data model untuk chart (persen)
 class ChartData {

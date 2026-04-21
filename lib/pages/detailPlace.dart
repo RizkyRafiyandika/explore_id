@@ -911,7 +911,7 @@ class _MyDetailPlaceState extends State<MyDetailPlace>
               ),
               const SizedBox(width: 12),
               Text(
-                "Reviews & Comments",
+                "Reviews",
                 style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                   color: Colors.black87,
                   fontWeight: FontWeight.w700,

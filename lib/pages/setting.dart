@@ -1,4 +1,4 @@
-import 'package:explore_id/pages/ediProfile.dart';
+import 'package:explore_id/features/profile/screens/edit_profile_screen.dart';
 import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/services/auth_firebase.dart';
 import 'package:explore_id/services/notificaion_service.dart';

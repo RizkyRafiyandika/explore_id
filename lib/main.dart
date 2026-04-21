@@ -2,7 +2,7 @@ import 'package:explore_id/pages/plan/providers/plan_provider.dart';
 import 'package:explore_id/provider/plan_helper_provider.dart';
 import 'package:explore_id/services/auth_wrapper.dart';
 import 'package:explore_id/provider/tripProvider.dart';
-import 'package:explore_id/provider/userProvider.dart';
+import 'package:explore_id/features/profile/providers/user_provider.dart';
 import 'package:explore_id/provider/role_provider.dart';
 import 'package:explore_id/provider/admin_provider.dart';
 import 'package:explore_id/services/notificaion_service.dart';

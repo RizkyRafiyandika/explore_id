@@ -6,8 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 
 class MyUserProvider with ChangeNotifier {
-  String _username = "Guest1";
-  String _email = "guest@example.com";
+  String _username = "";
+  String _email = "";
   File? _imageFile;
   String? _profileImageUrl;
 

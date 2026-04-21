@@ -2,13 +2,13 @@ import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/components/custome_Bottom_submit.dart';
 import 'package:explore_id/models/category.dart';
 import 'package:explore_id/pages/likes.dart';
-import 'package:explore_id/pages/profile.dart';
+import 'package:explore_id/features/profile/screens/profile_screen.dart';
 import 'package:explore_id/pages/browser.dart';
 import 'package:explore_id/pages/plan_helper/plan_helper.dart';
 import 'package:explore_id/pages/selectCategory.dart';
 import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/provider/tripProvider.dart';
-import 'package:explore_id/provider/userProvider.dart';
+import 'package:explore_id/features/profile/providers/user_provider.dart';
 import 'package:explore_id/widget/carousel.dart';
 import 'package:explore_id/widget/customeToast.dart';
 // listTripCard removed from home as search contains the full list

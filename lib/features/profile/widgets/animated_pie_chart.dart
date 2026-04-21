@@ -1,4 +1,4 @@
-import 'package:explore_id/models/dataChartTrip.dart' as PieData;
+import 'package:explore_id/features/profile/models/data_chart_trip.dart' as PieData;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 

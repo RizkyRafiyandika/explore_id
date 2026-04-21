@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -147,6 +148,71 @@ class FirebaseAuthService {
       await FacebookAuth.instance.logOut();
     } catch (e) {
       print("Error during sign out: $e");
+    }
+  }
+
+  Future<void> deleteUserAccount() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception("No user currently logged in.");
+      }
+
+      String uid = user.uid;
+
+      // 1. Delete all events created by user
+      var eventsSnapshot =
+          await _firestore
+              .collection('events')
+              .where('userId', isEqualTo: uid)
+              .get();
+      for (var doc in eventsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      var likesSnapshot =
+          await _firestore
+              .collection('likes')
+              .where('userId', isEqualTo: uid)
+              .get();
+      for (var doc in likesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      var commentsSnapshot =
+          await _firestore
+              .collection('comments')
+              .where('userId', isEqualTo: uid)
+              .get();
+      for (var doc in commentsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      try {
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('user_images')
+            .child('$uid.jpg');
+        await storageRef.delete();
+      } catch (e) {
+        print("Error deleting profile image (might not exist): $e");
+      }
+
+      await _firestore.collection('users').doc(uid).delete();
+
+      await user.delete();
+      await GoogleSignIn().signOut();
+      await FacebookAuth.instance.logOut();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw Exception(
+          'Untuk mengamankan akun, Anda perlu login ulang sebelum dapat menghapus akun Anda. Silakan sign out lalu login kembali.',
+        );
+      }
+      rethrow;
+    } catch (e) {
+      print("Error deleting account: $e");
+      rethrow;
     }
   }
 }
