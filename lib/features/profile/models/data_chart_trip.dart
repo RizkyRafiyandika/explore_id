@@ -41,11 +41,16 @@ Future<void> generateChartData(String userId) async {
 
   // Buat mapping warna berdasarkan nama kategori
   final colorMap = {
-    'Mountain': Colors.blue.withOpacity(0.8),
-    'Culinary': Colors.orange.withOpacity(0.8),
-    'Culture': Color.fromARGB(255, 76, 104, 175).withOpacity(0.8),
-    'Beach': Color.fromARGB(255, 175, 135, 76).withOpacity(0.8),
-    'Nature': Color.fromARGB(255, 190, 53, 217).withOpacity(0.8),
+    'Mountain': Colors.blue.shade600,
+    'Culinary': Colors.orange.shade600,
+    'Culture': Colors.indigo.shade600,
+    'Beach': Colors.teal.shade600,
+    'Nature': Colors.green.shade600,
+    'Historical': Colors.brown.shade600,
+    'City': Colors.blueGrey.shade600,
+    'Adventure': Colors.red.shade600,
+    'Religious': Colors.amber.shade700,
+    'Water': Colors.cyan.shade600,
   };
 
   rawData.forEach((place, count) {

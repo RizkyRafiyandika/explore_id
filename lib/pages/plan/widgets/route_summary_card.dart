@@ -6,52 +6,85 @@ class RouteSummaryCard extends StatelessWidget {
   final bool isBuildingRoute;
   final double distanceKm;
   final double durationMin;
+  final VoidCallback onFitRoutePressed;
 
   const RouteSummaryCard({
     super.key,
     required this.isBuildingRoute,
     required this.distanceKm,
     required this.durationMin,
+    required this.onFitRoutePressed,
   });
 
   @override
   Widget build(BuildContext context) {
     final hasStats = distanceKm > 0 && durationMin > 0;
 
+    if (!hasStats && !isBuildingRoute) return const SizedBox.shrink();
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
           BoxShadow(
-            blurRadius: 12,
+            blurRadius: 20,
             spreadRadius: 0,
-            offset: Offset(0, 6),
-            color: Color(0x14000000),
+            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.08),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.route, color: tdcyan),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              hasStats
-                  ? "Total: ${distanceKm.toStringAsFixed(1)} km • ${_formatDuration(durationMin)}"
-                  : "Belum ada rute. Tambah destinasi untuk melihat total.",
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "FASTEST ROUTE",
+                      style: TextStyle(
+                        fontSize: 11,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isBuildingRoute
+                          ? "Calculating..."
+                          : "Total: ${distanceKm.toStringAsFixed(1)} km • ${_formatDuration(durationMin)}",
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: tdcyan,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: onFitRoutePressed,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: tdcyan.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.zoom_out_map, color: tdcyan, size: 24),
+                ),
+              ),
+            ],
           ),
-          if (isBuildingRoute)
-            const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: tdcyan),
-            ),
         ],
       ),
     );

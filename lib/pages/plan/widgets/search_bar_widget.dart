@@ -137,7 +137,7 @@ class _UnifiedSearchBarWidgetState extends State<UnifiedSearchBarWidget>
                 focusNode: _focusNode,
                 textInputAction: TextInputAction.search,
                 decoration: const InputDecoration(
-                  hintText: "Cari lokasi (manual submit saja)",
+                  hintText: "Where to?",
                   border: InputBorder.none,
                   isDense: true,
                 ),

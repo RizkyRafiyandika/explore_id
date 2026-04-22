@@ -1,3 +1,4 @@
+import 'package:explore_id/pages/plan/models/destination.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -114,11 +115,59 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
             opacity: _fadeAnimation!,
             child: SlideTransition(
               position: _slideAnimation!,
-              child: Column(
+              child: Stack(
                 children: [
+                  // 1. Full Screen Map
                   _buildMapSection(provider),
-                  _buildToolbar(provider),
-                  _buildContentSection(provider),
+
+                  // 2. Search Bar (Floating)
+                  UnifiedSearchBarWidget(
+                    controller: _destinationController,
+                    isSearching: provider.isSearching,
+                    suggestionNotifier: _searchSuggestionNotifier,
+                    onChanged: (value) {},
+                    onSuggestionSelected: (suggestion) async {
+                      _destinationController.clear();
+                      await provider.addDestinationFromSuggestion(
+                        suggestion.name,
+                        suggestion.latitude,
+                        suggestion.longitude,
+                      );
+                      customToast("Destinasi ditambahkan: ${suggestion.name}");
+                    },
+                    onAddPressed: () async {
+                      final query = _destinationController.text.trim();
+                      if (query.isNotEmpty) {
+                        _destinationController.clear();
+                        await _handleManualSearch(provider, query);
+                      }
+                    },
+                  ),
+
+                  // 3. Travel Mode Selector (Below Search Bar)
+                  Positioned(
+                    top: 110,
+                    left: 0,
+                    right: 0,
+                    child: ModeSelector(
+                      selectedMode: provider.travelMode,
+                      disabled: provider.isBuildingRoute,
+                      onModeChanged: (mode) async {
+                        await provider.changeTravelMode(mode);
+                      },
+                    ),
+                  ),
+
+                  // 4. Map Action Buttons (Right side)
+
+                  // 5. Bottom Overlays
+                  Positioned(
+                    bottom:
+                        20, // Add more bottom padding to clear global bottom nav
+                    left: 0,
+                    right: 0,
+                    child: _buildBottomOverlays(provider),
+                  ),
                 ],
               ),
             ),
@@ -133,138 +182,84 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildMapSection(PlanProvider provider) {
-    final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-    final double mapHeight =
-        keyboardOpen ? MediaQuery.of(context).size.height * 0.35 : 460.0;
-
-    return SizedBox(
-      height: mapHeight,
-      child: Stack(
+    return Positioned.fill(
+      child: FlutterMap(
+        mapController: _mapController,
+        options: MapOptions(
+          initialCenter: provider.currentLocation!,
+          initialZoom: 15,
+          interactionOptions: const InteractionOptions(
+            flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+          ),
+        ),
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24),
+          TileLayer(
+            urlTemplate:
+                'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+            subdomains: const ['a', 'b', 'c', 'd'],
+            userAgentPackageName: 'com.exploreid.app',
+            retinaMode: true,
+          ),
+          if (provider.currentLocation != null || provider.hasDestinations)
+            MarkerLayer(
+              markers: [
+                if (provider.currentLocation != null)
+                  Marker(
+                    point: provider.currentLocation!,
+                    child: _markerFactory.buildCurrentMarker(),
+                  ),
+                ...provider.destinations.asMap().entries.map((e) {
+                  final idx = e.key;
+                  final dest = e.value;
+                  return Marker(
+                    point: dest.latlng,
+                    width: 60,
+                    height: 80,
+                    alignment: Alignment.topCenter,
+                    child: _markerFactory.buildDestinationMarker(index: idx),
+                  );
+                }),
+              ],
             ),
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: provider.currentLocation!,
-                initialZoom: 15,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                ),
+          if (provider.hasRoute)
+            AnimatedPolylineLayer(
+              key: ValueKey(provider.routeAnimationTrigger),
+              points: provider.routePolyline,
+              color: tdcyan,
+              strokeWidth: 7.0, // Thicker line
+              duration: const Duration(milliseconds: 1500),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomOverlays(PlanProvider provider) {
+    final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+    if (keyboardOpen) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          RouteSummaryCard(
+            isBuildingRoute: provider.isBuildingRoute,
+            distanceKm: provider.totalDistanceKm,
+            durationMin: provider.totalDurationMin,
+            onFitRoutePressed: () => _fitMapToAll(provider),
+          ),
+          const SizedBox(height: 8),
+          if (provider.hasDestinations)
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.25,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate:
-                      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                  subdomains: const ['a', 'b', 'c', 'd'],
-                  userAgentPackageName: 'com.exploreid.app',
-                  retinaMode: true,
-                ),
-                if (provider.currentLocation != null ||
-                    provider.hasDestinations)
-                  MarkerLayer(
-                    markers: [
-                      // Custom marker for current location
-                      if (provider.currentLocation != null)
-                        Marker(
-                          point: provider.currentLocation!,
-                          child: _markerFactory.buildCurrentMarker(),
-                        ),
-                      // Numbered markers for destinations
-                      ...provider.destinations.asMap().entries.map((e) {
-                        final idx = e.key;
-                        final dest = e.value;
-                        return Marker(
-                          point: dest.latlng,
-                          width: 60,
-                          height: 80,
-                          alignment:
-                              Alignment
-                                  .topCenter, // Pastikan ikon menunjuk ke titik koordinat dengan benar
-                          child: _markerFactory.buildDestinationMarker(
-                            index: idx,
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                if (provider.hasRoute)
-                  AnimatedPolylineLayer(
-                    key: ValueKey(provider.routeAnimationTrigger),
-                    points: provider.routePolyline,
-                    color: tdcyan,
-                    strokeWidth: 5.0,
-                    duration: const Duration(milliseconds: 1500),
-                  ),
-              ],
+              child: _buildDestinationList(provider),
             ),
-          ),
-
-          // Unified Search Bar with Suggestions Dropdown
-          UnifiedSearchBarWidget(
-            controller: _destinationController,
-            isSearching: provider.isSearching,
-            suggestionNotifier: _searchSuggestionNotifier,
-            onChanged: (value) {
-              // Hanya update UI, jangan auto-submit
-            },
-            onSuggestionSelected: (suggestion) async {
-              // Ketika user memilih dari dropdown
-              _destinationController.clear();
-              await provider.addDestinationFromSuggestion(
-                suggestion.name,
-                suggestion.latitude,
-                suggestion.longitude,
-              );
-              customToast("Destinasi ditambahkan: ${suggestion.name}");
-            },
-            onAddPressed: () async {
-              // Manual submit via tombol add
-              final query = _destinationController.text.trim();
-              if (query.isNotEmpty) {
-                _destinationController.clear();
-                await _handleManualSearch(provider, query);
-              }
-            },
-          ),
-
-          // Right-side floating action buttons
-          Positioned(
-            bottom: 18,
-            right: 16,
-            child: Column(
-              children: [
-                _smallFab(
-                  tooltip: 'Fit to route',
-                  icon: Icons.zoom_out_map,
-                  onTap: () => _fitMapToAll(provider),
-                ),
-                const SizedBox(height: 10),
-                _smallFab(
-                  tooltip: 'Lokasi saya',
-                  icon: Icons.my_location,
-                  disabled: provider.isLoadingLocation,
-                  onTap: () async {
-                    await provider.getCurrentLocation();
-                    if (provider.currentLocation != null) {
-                      // Safe zoom level - prevent Infinity/NaN crash
-                      final currentZoom = _mapController.camera.zoom;
-                      final safeZoom =
-                          (currentZoom.isFinite && currentZoom > 0)
-                              ? currentZoom
-                              : 15.0;
-
-                      _mapController.move(provider.currentLocation!, safeZoom);
-                    }
-                  },
-                  isLoading: provider.isLoadingLocation,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -275,7 +270,6 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
     if (query.isEmpty) return;
 
     try {
-      // Untuk manual search, gunakan first suggestion dari Nominatim
       final result = await provider.searchAndAddDestination(query);
       if (result != null) {
         customToast("Destinasi ditambahkan: $result");
@@ -295,7 +289,7 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
     bool isLoading = false,
   }) {
     return FloatingActionButton(
-      heroTag: tooltip ?? icon.codePoint,
+      heroTag: tooltip ?? icon.codePoint.toString(),
       onPressed: disabled ? null : onTap,
       backgroundColor: disabled ? Colors.grey : tdcyan,
       mini: true,
@@ -313,166 +307,58 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildToolbar(PlanProvider provider) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      decoration: const BoxDecoration(color: Colors.transparent),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            // Travel mode selector
-            ModeSelector(
-              selectedMode: provider.travelMode,
-              disabled: provider.isBuildingRoute,
-              onModeChanged: (mode) async {
-                final oldMode = provider.travelMode;
-                customToast("Mengubah mode dari $oldMode ke $mode...");
-
-                await provider.changeTravelMode(mode);
-
-                if (provider.totalDistanceKm > 0) {
-                  customToast(
-                    "Mode $mode: ${provider.totalDistanceKm.toStringAsFixed(2)} km, "
-                    "${provider.totalDurationMin.toStringAsFixed(0)} menit",
-                  );
-                } else {
-                  customToast("Mode diubah ke $mode");
-                }
-              },
-            ),
-            const SizedBox(width: 16),
-            // Actions
-            _toolbarButton(
-              icon: Icons.auto_awesome,
-              label: 'Optimize',
-              onTap:
-                  !provider.hasDestinations || provider.isBuildingRoute
-                      ? null
-                      : () async {
-                        await provider.fetchOptimizedRoute();
-                        _fitMapToAll(provider);
-                        customToast(
-                          "Rute dioptimasi: ${provider.destinations.length} tujuan siap!",
-                        );
-                      },
-            ),
-            const SizedBox(width: 8),
-            _toolbarButton(
-              icon: Icons.cleaning_services,
-              label: 'Clear',
-              onTap:
-                  !provider.hasDestinations && !provider.hasRoute
-                      ? null
-                      : () {
-                        provider.clearAll();
-                        customToast("Semua destinasi dihapus");
-                      },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _toolbarButton({
-    required IconData icon,
-    required String label,
-    VoidCallback? onTap,
-  }) {
-    final disabled = onTap == null;
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon:
-          disabled
-              ? const SizedBox(width: 16, height: 16, child: SizedBox.shrink())
-              : Icon(icon, size: 18),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: disabled ? Colors.grey.shade300 : tdcyan,
-        foregroundColor: disabled ? Colors.grey.shade700 : Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        elevation: disabled ? 0 : 2,
-      ),
-    );
-  }
-
-  Widget _buildContentSection(PlanProvider provider) {
-    return Expanded(
-      child: Container(
-        decoration: const BoxDecoration(color: Colors.transparent),
-        child: Column(
-          children: [
-            RouteSummaryCard(
-              isBuildingRoute: provider.isBuildingRoute,
-              distanceKm: provider.totalDistanceKm,
-              durationMin: provider.totalDurationMin,
-            ),
-            const SizedBox(height: 8),
-            Expanded(child: _buildDestinationList(provider)),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildDestinationList(PlanProvider provider) {
-    if (!provider.hasDestinations) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        child: Align(
-          alignment: Alignment.topLeft,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.place_outlined, color: Colors.grey.shade400),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  "Belum ada destinasi. Tambahkan lewat kotak pencarian di atas",
-                  style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     final keyboardBottom = MediaQuery.of(context).viewInsets.bottom;
-    return ReorderableListView.builder(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 24 + keyboardBottom),
-      itemCount: provider.destinations.length,
-      onReorder: (oldIndex, newIndex) async {
-        await provider.reorderDestinations(oldIndex, newIndex);
-        customToast("Urutan diperbarui");
-      },
-      proxyDecorator: (child, index, animation) {
-        return Material(
-          elevation: 6,
-          borderRadius: BorderRadius.circular(12),
-          child: child,
-        );
-      },
-      itemBuilder: (context, index) {
-        final dest = provider.destinations[index];
-        final leg = index < provider.legs.length ? provider.legs[index] : null;
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 1. Static Starting Point (My Location)
+          DestinationListItem(
+            index: -1, // Special index for starting point
+            destination: Destination(
+              id: 'current_loc',
+              name: "My Location",
+              latlng: provider.currentLocation!,
+            ),
+            onTap: () {
+              _mapController.move(provider.currentLocation!, 16);
+            },
+            onDismissed: () {},
+          ),
 
-        return DestinationListItem(
-          key: ValueKey(dest.id),
-          index: index,
-          destination: dest,
-          leg: leg,
-          onTap: () {
-            _mapController.move(dest.latlng, 16);
-          },
-          onDismissed: () async {
-            await provider.removeDestinationAt(index);
-            customToast("${dest.name} dihapus");
-          },
-        );
-      },
+          // 2. Reorderable Destinations
+          ReorderableListView.builder(
+            padding: EdgeInsets.fromLTRB(0, 0, 0, keyboardBottom),
+            itemCount: provider.destinations.length,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            onReorder: (oldIndex, newIndex) async {
+              await provider.reorderDestinations(oldIndex, newIndex);
+              customToast("Urutan diperbarui");
+            },
+            itemBuilder: (context, index) {
+              final dest = provider.destinations[index];
+              final leg =
+                  index < provider.legs.length ? provider.legs[index] : null;
+
+              return DestinationListItem(
+                key: ValueKey(dest.id),
+                index: index,
+                destination: dest,
+                leg: leg,
+                onTap: () {
+                  _mapController.move(dest.latlng, 16);
+                },
+                onDismissed: () async {
+                  await provider.removeDestinationAt(index);
+                  customToast("${dest.name} dihapus");
+                },
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
