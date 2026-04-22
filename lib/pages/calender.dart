@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:explore_id/colors/color.dart';
-import 'package:explore_id/components/global.dart';
 import 'package:explore_id/models/event.dart';
 import 'package:explore_id/models/listTrip.dart';
 import 'package:explore_id/provider/tripProvider.dart';
-import 'package:explore_id/widget/navBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:explore_id/widget/calendar_event_bottom_sheet.dart';
@@ -178,28 +175,6 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
       backgroundColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      leading: Container(
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Color(0xFF1E293B),
-            size: 20,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -481,6 +456,19 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
   }
 
   Widget _buildEventCard(Event event, int index) {
+    final List<ListTrip> listTrips =
+        Provider.of<MytripProvider>(context, listen: false).allTrip;
+    final trip = listTrips.where((t) => t.id == event.id).firstOrNull;
+
+    // Parse time for the left column
+    String timeOnly = "";
+    String amPm = "";
+    if (event.start.isNotEmpty) {
+      final parts = event.start.split(' ');
+      timeOnly = parts[0];
+      if (parts.length > 1) amPm = parts[1];
+    }
+
     return TweenAnimationBuilder(
       duration: Duration(milliseconds: 600 + (index * 100)),
       tween: Tween<double>(begin: 0, end: 1),
@@ -489,234 +477,291 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
           offset: Offset(0, 30 * (1 - value)),
           child: Opacity(
             opacity: value,
-            child: Slidable(
-              key: ValueKey(event.id),
-              endActionPane: ActionPane(
-                motion: const BehindMotion(),
-                extentRatio: 0.5,
-                children: [
-                  SlidableAction(
-                    onPressed: (context) async {
-                      event.isCheck = !event.isCheck;
-                      if (event.docId != null) {
-                        try {
-                          await updateEvent(event);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  event.isCheck
-                                      ? "Event marked as done"
-                                      : "Event marked as undo",
-                                ),
-                                backgroundColor:
-                                    event.isCheck
-                                        ? Colors.green
-                                        : Colors.blueGrey,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          // Revert UI state on error
-                          setState(() {
-                            event.isCheck = !event.isCheck;
-                          });
-                        }
-                      }
-                    },
-                    backgroundColor:
-                        event.isCheck
-                            ? const Color(0xFF64748B)
-                            : const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    icon: event.isCheck ? Icons.undo : Icons.check_circle,
-                    label: event.isCheck ? 'Undo' : 'Done',
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  SlidableAction(
-                    onPressed: (context) async {
-                      if (event.docId != null) {
-                        try {
-                          await deleteEvent(event.docId!);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Event deleted successfully"),
-                                backgroundColor: Colors.orange,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Failed to delete: $e"),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      }
-                    },
-                    backgroundColor: const Color(0xFFEF4444),
-                    foregroundColor: Colors.white,
-                    icon: Icons.delete,
-                    label: 'Delete',
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ],
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(
-                          color: _getLabelColor(event.label),
-                          width: 4,
-                        ),
-                      ),
-                    ),
-                    child: ListTile(
-                      onTap: () => showCalendarEventBottomSheet(context, event),
-                      contentPadding: const EdgeInsets.all(20),
-                      leading: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: _getLabelColor(event.label).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          _getEventIcon(event.label),
-                          color: _getLabelColor(event.label),
-                          size: 24,
-                        ),
-                      ),
-                      title: Text(
-                        event.place,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color:
-                              event.isCheck
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF1E293B),
-                          decoration:
-                              event.isCheck ? TextDecoration.lineThrough : null,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 1. Time Column
+                    SizedBox(
+                      width: 60,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 4),
                           Text(
-                            event.title,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color:
-                                  event.isCheck
-                                      ? const Color(0xFF94A3B8)
-                                      : const Color(0xFF64748B),
-                              fontWeight: FontWeight.w500,
-                              decoration:
-                                  event.isCheck
-                                      ? TextDecoration.lineThrough
-                                      : null,
+                            timeOnly,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1E293B),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                size: 16,
-                                color: Color(0xFF94A3B8),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                "${event.start} - ${event.end}",
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF94A3B8),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            amPm,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1E293B).withOpacity(0.5),
+                            ),
                           ),
-                          if (event.desk.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              event.desk,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF94A3B8),
-                              ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // 2. Main Card Content
+                    Expanded(
+                      child: Slidable(
+                        key: ValueKey(event.id),
+                        endActionPane: ActionPane(
+                          motion: const BehindMotion(),
+                          extentRatio: 0.7,
+                          children: [
+                            SlidableAction(
+                              onPressed: (context) async {
+                                event.isCheck = !event.isCheck;
+                                if (event.docId != null) {
+                                  try {
+                                    await updateEvent(event);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            event.isCheck
+                                                ? "Event marked as done"
+                                                : "Event marked as undo",
+                                          ),
+                                          backgroundColor:
+                                              event.isCheck
+                                                  ? Colors.green
+                                                  : Colors.blueGrey,
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    setState(() {
+                                      event.isCheck = !event.isCheck;
+                                    });
+                                  }
+                                }
+                              },
+                              backgroundColor:
+                                  event.isCheck
+                                      ? const Color(0xFF64748B)
+                                      : const Color(0xFF10B981),
+                              foregroundColor: Colors.white,
+                              icon:
+                                  event.isCheck
+                                      ? Icons.undo
+                                      : Icons.check_circle,
+                              label: event.isCheck ? 'Undo' : 'Done',
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            SlidableAction(
+                              onPressed: (context) async {
+                                if (event.docId != null) {
+                                  try {
+                                    await deleteEvent(event.docId!);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Event deleted successfully",
+                                          ),
+                                          backgroundColor: Colors.orange,
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text("Failed to delete: $e"),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                }
+                              },
+                              backgroundColor: const Color(0xFFEF4444),
+                              foregroundColor: Colors.white,
+                              icon: Icons.delete,
+                              label: 'Delete',
+                              borderRadius: BorderRadius.circular(20),
                             ),
                           ],
-                        ],
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
+                        ),
+                        child: GestureDetector(
+                          onTap:
+                              () =>
+                                  showCalendarEventBottomSheet(context, event),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: _getLabelColor(
-                                event.label,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              event.label,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: _getLabelColor(event.label),
-                                fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: tdcyan.withOpacity(0.2),
+                                width: 1.5,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                // Trip Image
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(
+                                    trip?.imagePath ??
+                                        'https://via.placeholder.com/150',
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                              width: 80,
+                                              height: 80,
+                                              color: Colors.grey[200],
+                                              child: const Icon(
+                                                Icons.image_not_supported,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                // Text Content
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              event.place,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w800,
+                                                color: const Color(0xFF1E293B),
+                                                decoration:
+                                                    event.isCheck
+                                                        ? TextDecoration
+                                                            .lineThrough
+                                                        : null,
+                                              ),
+                                            ),
+                                          ),
+                                          Builder(
+                                            builder: (context) {
+                                              return GestureDetector(
+                                                onTap: () {
+                                                  Slidable.of(
+                                                    context,
+                                                  )?.openEndActionPane();
+                                                },
+                                                child: Icon(
+                                                  Icons.more_vert,
+                                                  size: 20,
+                                                  color: Colors.grey[400],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.access_time_outlined,
+                                            size: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            "${event.start} - ${event.end}",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // Chips
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: [
+                                          _buildChip(
+                                            event.label,
+                                            _getLabelColor(event.label),
+                                            _getEventIcon(event.label),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () => _navigateToLocation(event),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: tdcyan.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.location_on,
-                                color: tdcyan,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildChip(String label, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -770,35 +815,6 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
         ),
       ),
     );
-  }
-
-  void _navigateToLocation(Event event) {
-    final List<ListTrip> listTrips =
-        Provider.of<MytripProvider>(context, listen: false).allTrip;
-
-    final matchingTrips =
-        listTrips.where((trip) => trip.id == event.id).toList();
-
-    if (matchingTrips.isNotEmpty) {
-      final trip = matchingTrips.first;
-      globalDestination = LatLng(trip.latitude, trip.longitude);
-      globalTripEvent = {
-        'id': event.id,
-        'title': event.title,
-        'desk': event.desk,
-        'date': event.date,
-        'endDate': event.endDate,
-        'start': event.start,
-        'end': event.end,
-        'place': event.place,
-        'label': event.label,
-      };
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const NavBar(selectedIndex: 1)),
-      );
-    }
   }
 
   IconData _getEventIcon(String label) {

@@ -26,184 +26,143 @@ class ProfileHeader extends StatelessWidget {
         (user == null || user!.isAnonymous) ? "No email" : userProvider.email;
 
     return SliverToBoxAdapter(
-      child: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Container(
-                height: 120,
-                decoration: const BoxDecoration(
-                  color: tdcyan,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(40),
-                    bottomRight: Radius.circular(40),
+      child: Container(
+        padding: EdgeInsets.only(top: 50, left: 20, right: 20),
+        color: Colors.white,
+        child: Column(
+          children: [
+            // Profile Picture
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              // Settings button
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 10,
-                right: 16,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.settings_rounded,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (e) => MySettingPage()),
+                Container(
+                  width: 110,
+                  height: 110,
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
+                  child: Consumer<MyUserProvider>(
+                    builder: (context, provider, child) {
+                      ImageProvider backgroundImage;
+                      if (provider.profileImageUrl != null &&
+                          provider.profileImageUrl!.isNotEmpty) {
+                        backgroundImage = NetworkImage(
+                          provider.profileImageUrl!,
+                        );
+                      } else if (provider.imageFile != null) {
+                        backgroundImage = FileImage(provider.imageFile!);
+                      } else {
+                        backgroundImage = const AssetImage(
+                          'assets/profile_pic.jpg',
+                        );
+                      }
+                      return CircleAvatar(
+                        backgroundImage: backgroundImage,
+                        radius: 55,
                       );
                     },
                   ),
                 ),
-              ),
-              // Profile Picture Stacked half-way
-              Positioned(
-                bottom: -50,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 116,
-                      height: 116,
+                // Camera Icon Overlay
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      final provider = Provider.of<MyUserProvider>(
+                        context,
+                        listen: false,
+                      );
+                      _showImageBar(context, provider);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
+                        color: tdcyan,
                         shape: BoxShape.circle,
-                        color: Colors.white,
+                        border: Border.all(color: Colors.white, width: 2),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                    ),
-                    Container(
-                      width: 108,
-                      height: 108,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                      ),
-                      child: Consumer<MyUserProvider>(
-                        builder: (context, provider, child) {
-                          ImageProvider backgroundImage;
-                          if (provider.profileImageUrl != null &&
-                              provider.profileImageUrl!.isNotEmpty) {
-                            backgroundImage = NetworkImage(
-                              provider.profileImageUrl!,
-                            );
-                          } else if (provider.imageFile != null) {
-                            backgroundImage = FileImage(provider.imageFile!);
-                          } else {
-                            backgroundImage = const AssetImage(
-                              'assets/profile_pic.jpg',
-                            );
-                          }
-                          return CircleAvatar(
-                            backgroundImage: backgroundImage,
-                            radius: 50,
-                          );
-                        },
+                      child: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: Colors.white,
+                        size: 16,
                       ),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: () async {
-                          HapticFeedback.mediumImpact();
-                          final provider = Provider.of<MyUserProvider>(
-                            context,
-                            listen: false,
-                          );
-                          _showImageBar(context, provider);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
-                            color: tdcyan,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 60),
-          Text(
-            displayUsername,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-              letterSpacing: -0.5,
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              Clipboard.setData(ClipboardData(text: displayEmail));
-              customToast("Email copied to clipboard");
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: tdcyan.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: tdcyan.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    displayEmail,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: tdcyan,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Icon(
-                    Icons.copy_rounded,
-                    color: tdcyan.withValues(alpha: 0.8),
-                    size: 14,
-                  ),
-                ],
+            const SizedBox(height: 24),
+            // Name
+            Text(
+              displayUsername,
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1E293B),
+                letterSpacing: -1,
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-        ],
+            const SizedBox(height: 4),
+            // Email
+            Text(
+              displayEmail,
+              style: TextStyle(
+                fontSize: 16,
+                color: const Color(0xFF1E293B).withValues(alpha: 0.6),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Edit Profile Button
+            ElevatedButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (e) => MySettingPage()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF006699),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                "Edit Profile",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

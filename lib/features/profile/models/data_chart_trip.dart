@@ -51,19 +51,28 @@ Future<void> generateChartData(String userId) async {
     'Adventure': Colors.red.shade600,
     'Religious': Colors.amber.shade700,
     'Water': Colors.cyan.shade600,
+    // Add missing labels from calendar
+    'Travel': const Color(0xFFF59E0B),
+    'Personal': const Color(0xFF10B981),
+    'Work': const Color(0xFF6366F1),
+    'Health': const Color(0xFFEF4444),
   };
 
   rawData.forEach((place, count) {
-    final int percent = ((count / totalVisits) * 100).round();
+    // Normalize place name for color lookup
+    String normalizedPlace = place;
+    if (place.isNotEmpty) {
+      normalizedPlace = place.substring(0, 1).toUpperCase() + place.substring(1).toLowerCase();
+    }
+    
+    final int percent = totalVisits > 0 ? ((count / totalVisits) * 100).round() : 0;
 
     chartData.add(
       ChartData(
         name: place,
         percent: percent,
         count: count,
-        color:
-            colorMap[place] ??
-            Colors.grey, // fallback kalau warnanya gak ketemu
+        color: colorMap[normalizedPlace] ?? colorMap[place] ?? Colors.grey.shade400,
       ),
     );
   });

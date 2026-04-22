@@ -12,17 +12,9 @@ List<PieChartSectionData> getSections(int touchIndex) =>
 
           final section = PieChartSectionData(
             color: data.color,
-
-            value:
-                data.percent
-                    .toDouble(), // tetap pakai percent untuk proporsi grafik
-            title: '${data.count}', // ini count-nya yang ditampilkan
+            value: data.percent.toDouble(),
             radius: radius,
-            titleStyle: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+            showTitle: false,
           );
 
           return MapEntry(index, section);

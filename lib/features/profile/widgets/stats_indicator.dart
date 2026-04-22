@@ -13,50 +13,34 @@ class MyIndicatorWidget extends StatelessWidget {
       runSpacing: 8,
       children: [
         ...chartData.map(
-          (data) => BuildIndicator(color: data.color, text: data.name),
+          (data) => BuildIndicator(data: data),
         ),
-        const BuildAddIndicator(), // Tambahkan tombol +
+        const BuildAddIndicator(),
       ],
     );
   }
 }
 
 class BuildIndicator extends StatelessWidget {
-  final Color color;
-  final String text;
+  final ChartData data;
 
-  const BuildIndicator({super.key, required this.color, required this.text});
+  const BuildIndicator({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color),
+        color: data.color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: tdwhitepure,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: tdwhitepure,
-            ),
-          ),
-        ],
+      child: Text(
+        data.name,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: data.color.withOpacity(0.9),
+        ),
       ),
     );
   }
@@ -69,7 +53,6 @@ class BuildAddIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        // Tindakan saat tombol "+" ditekan
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MyNearbyPage()),
@@ -77,23 +60,23 @@ class BuildAddIndicator extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.4),
+          color: Colors.grey.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.withOpacity(0.4)),
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.add, color: Colors.white, size: 16),
-            SizedBox(width: 4),
+            Icon(Icons.add, color: Colors.grey[600], size: 16),
+            const SizedBox(width: 4),
             Text(
               "Tambah",
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey[600],
               ),
             ),
           ],

@@ -52,10 +52,20 @@ class _MyProfileState extends State<MyProfile>
     if (currentUser != null) {
       futureData = getMonthlyVisitCounts(currentUser.uid);
       generateChartData(currentUser.uid).then((_) {
-        setState(() {
-          isLoading = false;
-        });
-        _animationController.forward();
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          _animationController.forward();
+        }
+      }).catchError((e) {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          _animationController.forward();
+        }
+        debugPrint("Error generating chart data: $e");
       });
     }
   }
@@ -83,11 +93,11 @@ class _MyProfileState extends State<MyProfile>
               child: SlideTransition(
                 position: _slideAnimation,
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.only(left: 24, right: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const ProfileStatsCard(),
+                      ProfileStatsCard(isLoading: isLoading),
                       const SizedBox(height: 24),
 
                       ProfileChartSection(isLoading: isLoading),

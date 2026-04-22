@@ -50,13 +50,13 @@ class ProfileChartSection extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           if (isLoading)
-            SizedBox(
-              height: 200,
-              child: const Center(child: CircularProgressIndicator()),
+            const SizedBox(
+              height: 250,
+              child: Center(child: CircularProgressIndicator()),
             )
           else if (chartData.isEmpty)
             Container(
-              height: 200,
+              height: 250,
               decoration: BoxDecoration(
                 color: Colors.grey[50],
                 borderRadius: BorderRadius.circular(16),
@@ -79,17 +79,53 @@ class ProfileChartSection extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Start your first journey!",
-                      style: TextStyle(color: Colors.grey[500], fontSize: 14),
-                    ),
                   ],
                 ),
               ),
             )
-          else
-            AnimatedPieChart(getSections: getSections),
+          else ...[
+            AnimatedPieChart(
+              getSections: getSections,
+              totalTrips: chartData.fold(0, (sum, item) => sum + item.count),
+            ),
+            const SizedBox(height: 24),
+            const Divider(height: 1),
+            const SizedBox(height: 20),
+            // Legend
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children:
+                    chartData.map((data) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 20),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: data.color,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              data.name,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+              ),
+            ),
+          ],
         ],
       ),
     );

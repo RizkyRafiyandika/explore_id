@@ -3,7 +3,8 @@ import 'package:explore_id/colors/color.dart';
 import 'package:explore_id/features/profile/widgets/stats_indicator.dart';
 
 class ProfileStatsCard extends StatelessWidget {
-  const ProfileStatsCard({super.key});
+  final bool isLoading;
+  const ProfileStatsCard({super.key, required this.isLoading});
 
   @override
   Widget build(BuildContext context) {
@@ -24,28 +25,28 @@ class ProfileStatsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: tdcyan.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.analytics_rounded, color: tdcyan, size: 24),
-              ),
-              const SizedBox(width: 12),
               const Text(
-                "Travel Analytics",
+                "Travel Interests",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+                  color: Color(0xFF1E293B),
                 ),
+              ),
+              Icon(
+                Icons.local_offer_outlined,
+                color: const Color(0xFF006699).withOpacity(0.8),
+                size: 22,
               ),
             ],
           ),
           const SizedBox(height: 16),
-          MyIndicatorWidget(),
+          if (isLoading)
+            const Center(child: LinearProgressIndicator())
+          else
+            const MyIndicatorWidget(),
         ],
       ),
     );
