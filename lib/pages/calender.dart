@@ -85,7 +85,10 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                     place: data['place'],
                     label: data['label'],
                     docId: doc.id,
-                    isCheck: data["isCheck"] is bool ? data["isCheck"] : false,
+                    isCheck:
+                        (data["isCheck"] ?? data["ischeck"]) is bool
+                            ? (data["isCheck"] ?? data["ischeck"])
+                            : false,
                   );
                 }).toList();
 
@@ -501,8 +504,15 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(event.isCheck ? "Event marked as done" : "Event marked as undo"),
-                                backgroundColor: event.isCheck ? Colors.green : Colors.blueGrey,
+                                content: Text(
+                                  event.isCheck
+                                      ? "Event marked as done"
+                                      : "Event marked as undo",
+                                ),
+                                backgroundColor:
+                                    event.isCheck
+                                        ? Colors.green
+                                        : Colors.blueGrey,
                               ),
                             );
                           }
@@ -669,7 +679,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                             decoration: BoxDecoration(
                               color: _getLabelColor(
                                 event.label,
-                              ).withOpacity(0.1),
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -687,7 +697,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: tdcyan.withOpacity(0.1),
+                                color: tdcyan.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(

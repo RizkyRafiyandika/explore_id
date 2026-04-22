@@ -35,9 +35,11 @@ class _ListExploreState extends State<ListExplore> {
           children: [
             CarouselSlider(
               options: CarouselOptions(
-                height: 180,
+                height: 380, // Increased height for premium look
                 autoPlay: true,
-                viewportFraction: 0.85,
+                viewportFraction: 0.75, // Smaller fraction to show more of the next card
+                enlargeCenterPage: true, // Focus on the center card
+                enlargeStrategy: CenterPageEnlargeStrategy.height,
               ),
               items:
                   selectedTrips.map((trip) {
@@ -53,9 +55,16 @@ class _ListExploreState extends State<ListExplore> {
                             );
                           },
                           child: Container(
-                            margin: EdgeInsets.symmetric(horizontal: 8),
+                            margin: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(28),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 15,
+                                  offset: Offset(0, 8),
+                                ),
+                              ],
                               image: DecorationImage(
                                 image: NetworkImage(trip.imagePath),
                                 fit: BoxFit.cover,
@@ -63,40 +72,97 @@ class _ListExploreState extends State<ListExplore> {
                             ),
                             child: Stack(
                               children: [
+                                // Smooth gradient overlay
                                 Container(
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(28),
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.black.withOpacity(0.6),
+                                        Colors.black.withOpacity(0.8),
+                                        Colors.black.withOpacity(0.2),
                                         Colors.transparent,
                                       ],
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
+                                      stops: const [0.0, 0.4, 0.8],
                                     ),
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.all(16.0),
+                                  padding: const EdgeInsets.all(20.0),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      Text(
-                                        trip.label,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                        ),
+                                      // Location Row
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.location_on,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              trip.daerah,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      const SizedBox(height: 4),
+                                      // Destination Name
                                       Text(
                                         trip.name,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 20,
+                                          fontSize: 22,
                                           fontWeight: FontWeight.bold,
                                         ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // Rating and Price Row
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          // Rating
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.star,
+                                                color: Colors.amber,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              const Text(
+                                                "4.9", // Hardcoded rating as requested for UI design
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          // Price
+                                          Text(
+                                            "Rp ${trip.harga.toStringAsFixed(0)}/day",
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
