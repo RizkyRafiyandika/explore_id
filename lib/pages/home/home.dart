@@ -86,6 +86,7 @@ class _MyHomeState extends State<MyHome> {
                     id: data['id'],
                     title: data['title'],
                     desk: data['desk'] ?? '',
+                    endDate: (data['endDate'] as Timestamp).toDate(),
                     date: (data['date'] as Timestamp).toDate(),
                     start: data['start'] ?? '',
                     end: data['end'] ?? '',

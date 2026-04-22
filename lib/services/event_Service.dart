@@ -13,14 +13,14 @@ Future<void> addEvents({
         "title": e.title,
         "desk": e.desk,
         "date": Timestamp.fromDate(e.date),
+        "endDate": Timestamp.fromDate(e.endDate),
         "start": e.start,
         "end": e.end,
         "place": e.place,
         "label": e.label,
-        "ischeck": e.isCheck,
+        "isCheck": e.isCheck,
       });
 
-      // Tambahkan ini:
       await docRef.update({"docId": docRef.id});
 
       print("✅ Event ditambahkan dengan docId: ${docRef.id}");
@@ -38,36 +38,70 @@ Future<List<Event>> getEventsForDate({
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
+    // Query events that start on or before the target day
     final querySnapshot =
         await FirebaseFirestore.instance
             .collection("events")
             .where("userId", isEqualTo: userId)
             .where(
               "date",
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+              isLessThanOrEqualTo: Timestamp.fromDate(endOfDay),
             )
-            .where("date", isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
             .get();
 
-    return querySnapshot.docs.map((doc) {
+    // Filter client-side to ensure they also end on or after the target day
+    return querySnapshot.docs.where((doc) {
+      final data = doc.data();
+      final eventEndDate = (data['endDate'] as Timestamp).toDate();
+      final normalizedEndDate = DateTime(eventEndDate.year, eventEndDate.month, eventEndDate.day);
+      return normalizedEndDate.isAtSameMomentAs(startOfDay) || normalizedEndDate.isAfter(startOfDay);
+    }).map((doc) {
       final data = doc.data();
       return Event(
         id: data['id'],
         title: data['title'],
         desk: data['desk'],
         date: (data['date'] as Timestamp).toDate(),
+        endDate: (data['endDate'] as Timestamp).toDate(),
         start: data['start'],
         end: data['end'],
         place: data['place'],
         label: data['label'],
-        isCheck:
-            data['isCheck'] ??
-            false, // Ambil dari Firestore, default ke false jika null
+        isCheck: data['isCheck'] ?? false, 
         docId: doc.id,
       );
     }).toList();
   } catch (e) {
     print("❌ Error fetching events: $e");
     return [];
+  }
+}
+
+Future<void> updateEvent(Event event) async {
+  if (event.docId == null) return;
+  try {
+    await FirebaseFirestore.instance.collection("events").doc(event.docId).update({
+      "title": event.title,
+      "desk": event.desk,
+      "date": Timestamp.fromDate(event.date),
+      "endDate": Timestamp.fromDate(event.endDate),
+      "start": event.start,
+      "end": event.end,
+      "isCheck": event.isCheck,
+    });
+    print("✅ Event updated: ${event.docId}");
+  } catch (e) {
+    print("❌ Error updating event: $e");
+    rethrow;
+  }
+}
+
+Future<void> deleteEvent(String docId) async {
+  try {
+    await FirebaseFirestore.instance.collection("events").doc(docId).delete();
+    print("✅ Event deleted: $docId");
+  } catch (e) {
+    print("❌ Error deleting event: $e");
+    rethrow;
   }
 }

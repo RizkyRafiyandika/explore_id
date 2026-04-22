@@ -218,7 +218,6 @@ class _UnifiedSearchBarWidgetState extends State<UnifiedSearchBarWidget>
   Widget _buildSuggestionItem(LocationSuggestion suggestion, int index) {
     return InkWell(
       onTap: () {
-        widget.controller.text = suggestion.name;
         widget.onSuggestionSelected(suggestion);
         widget.suggestionNotifier.clearSuggestions();
         _focusNode.unfocus();
@@ -440,7 +439,6 @@ class SearchSuggestionsDropdown extends StatelessWidget {
               final suggestion = notifier.suggestions[index];
               return InkWell(
                 onTap: () {
-                  controller.text = suggestion.name;
                   onSuggestionSelected(suggestion);
                   notifier.clearSuggestions();
                 },

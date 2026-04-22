@@ -41,7 +41,7 @@ class ProfileDangerZone extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     HapticFeedback.heavyImpact();
-                    _showDeleteAccountDialog(context);
+                    showDeleteAccountDialog(context);
                   },
                   icon: const Icon(
                     Icons.delete_forever_rounded,
@@ -73,7 +73,7 @@ class ProfileDangerZone extends StatelessWidget {
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext parentContext) {
+  static void showDeleteAccountDialog(BuildContext parentContext) {
     showDialog(
       context: parentContext,
       builder: (ctx) {

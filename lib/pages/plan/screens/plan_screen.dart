@@ -213,6 +213,7 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
             },
             onSuggestionSelected: (suggestion) async {
               // Ketika user memilih dari dropdown
+              _destinationController.clear();
               await provider.addDestinationFromSuggestion(
                 suggestion.name,
                 suggestion.latitude,
@@ -224,6 +225,7 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
               // Manual submit via tombol add
               final query = _destinationController.text.trim();
               if (query.isNotEmpty) {
+                _destinationController.clear();
                 await _handleManualSearch(provider, query);
               }
             },
@@ -277,8 +279,6 @@ class _PlanScreenState extends State<PlanScreen> with TickerProviderStateMixin {
       final result = await provider.searchAndAddDestination(query);
       if (result != null) {
         customToast("Destinasi ditambahkan: $result");
-        _destinationController.clear();
-        _searchSuggestionNotifier.clearSuggestions();
       } else {
         customToast("Lokasi untuk '$query' tidak ditemukan.");
       }

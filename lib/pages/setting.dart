@@ -1,4 +1,5 @@
 import 'package:explore_id/features/profile/screens/edit_profile_screen.dart';
+import 'package:explore_id/features/profile/widgets/profile_danger_zone.dart';
 import 'package:explore_id/pages/sign_in.dart';
 import 'package:explore_id/services/auth_firebase.dart';
 import 'package:explore_id/services/notificaion_service.dart';
@@ -121,10 +122,18 @@ class _MySettingPageState extends State<MySettingPage> {
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => MySignIn(),
-                      ), // 🛠 Ubah ke MySignIn()
+                      MaterialPageRoute(builder: (context) => MySignIn()),
                     );
+                  },
+                ),
+
+              if (!isGuest)
+                ListTile(
+                  leading: const Icon(Icons.delete_forever),
+                  title: const Text("Delete Account"),
+                  subtitle: const Text("Permanently delete your account"),
+                  onTap: () {
+                    ProfileDangerZone.showDeleteAccountDialog(context);
                   },
                 ),
 

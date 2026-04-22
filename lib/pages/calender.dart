@@ -12,6 +12,8 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:explore_id/widget/calendar_event_bottom_sheet.dart';
+import 'package:explore_id/services/event_Service.dart';
 
 class MyCalendar extends StatefulWidget {
   const MyCalendar({super.key});
@@ -33,11 +35,11 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _fadeController = AnimationController(
-      duration: Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     _slideController = AnimationController(
-      duration: Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
     _setupEventStream();
@@ -66,11 +68,18 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
             final List<Event> events =
                 snapshot.docs.map((doc) {
                   final data = doc.data();
+                  final startDate = (data['date'] as Timestamp).toDate();
+                  final endDate =
+                      data['endDate'] != null
+                          ? (data['endDate'] as Timestamp).toDate()
+                          : startDate; // Fallback if endDate doesn't exist yet
+
                   return Event(
                     id: data['id'],
                     title: data['title'],
                     desk: data['desk'],
-                    date: (data['date'] as Timestamp).toDate(),
+                    date: startDate,
+                    endDate: endDate,
                     start: data['start'],
                     end: data['end'],
                     place: data['place'],
@@ -97,11 +106,27 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
     final Map<DateTime, List<Event>> data = {};
 
     for (var event in events) {
-      final date = DateTime(event.date.year, event.date.month, event.date.day);
-      if (data[date] == null) {
-        data[date] = [];
+      // For multi-day support, we add the event to every day within its range
+      DateTime current = DateTime(
+        event.date.year,
+        event.date.month,
+        event.date.day,
+      );
+      final endDate = DateTime(
+        event.endDate.year,
+        event.endDate.month,
+        event.endDate.day,
+      );
+
+      while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
+        if (data[current] == null) {
+          data[current] = [];
+        }
+        data[current]!.add(event);
+
+        // Next day
+        current = current.add(const Duration(days: 1));
       }
-      data[date]!.add(event);
     }
 
     return data;
@@ -115,13 +140,13 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
   Color _getLabelColor(String label) {
     switch (label.toLowerCase()) {
       case 'work':
-        return Color(0xFF6366F1);
+        return const Color(0xFF6366F1);
       case 'personal':
-        return Color(0xFF10B981);
+        return const Color(0xFF10B981);
       case 'travel':
-        return Color(0xFFF59E0B);
+        return const Color(0xFFF59E0B);
       case 'health':
-        return Color(0xFFEF4444);
+        return const Color(0xFFEF4444);
       default:
         return tdcyan;
     }
@@ -130,14 +155,14 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: _buildModernAppBar(),
       body: FadeTransition(
         opacity: _fadeController,
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(child: _buildCalendarCard()),
-            SliverToBoxAdapter(child: SizedBox(height: 20)),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
             SliverToBoxAdapter(child: _buildEventsSection()),
           ],
         ),
@@ -151,7 +176,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: Container(
-        margin: EdgeInsets.all(8),
+        margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -159,12 +184,12 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back_ios_new,
             color: Color(0xFF1E293B),
             size: 20,
@@ -175,7 +200,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             "My Calendar",
             style: TextStyle(
               fontSize: 24,
@@ -185,7 +210,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
           ),
           Text(
             "${_getMonthName(_focusedDay.month)} ${_focusedDay.year}",
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: Color(0xFF64748B),
@@ -195,7 +220,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
       ),
       actions: [
         Container(
-          margin: EdgeInsets.all(8),
+          margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -203,12 +228,12 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
                 blurRadius: 10,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
           child: IconButton(
-            icon: Icon(Icons.today, color: tdcyan, size: 22),
+            icon: const Icon(Icons.today, color: tdcyan, size: 22),
             onPressed: () {
               setState(() {
                 _selectedDay = DateTime.now();
@@ -223,7 +248,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
 
   Widget _buildCalendarCard() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -231,7 +256,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
             blurRadius: 30,
-            offset: Offset(0, 10),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -262,12 +287,12 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
           headerStyle: HeaderStyle(
             formatButtonVisible: true,
             titleCentered: true,
-            titleTextStyle: TextStyle(
+            titleTextStyle: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: Color(0xFF1E293B),
             ),
-            formatButtonTextStyle: TextStyle(
+            formatButtonTextStyle: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: tdcyan,
@@ -276,13 +301,16 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
               color: tdcyan.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF64748B)),
-            rightChevronIcon: Icon(
+            leftChevronIcon: const Icon(
+              Icons.chevron_left,
+              color: Color(0xFF64748B),
+            ),
+            rightChevronIcon: const Icon(
               Icons.chevron_right,
               color: Color(0xFF64748B),
             ),
           ),
-          daysOfWeekStyle: DaysOfWeekStyle(
+          daysOfWeekStyle: const DaysOfWeekStyle(
             weekdayStyle: TextStyle(
               color: Color(0xFF64748B),
               fontWeight: FontWeight.w600,
@@ -296,19 +324,19 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
           ),
           calendarStyle: CalendarStyle(
             outsideDaysVisible: false,
-            weekendTextStyle: TextStyle(color: Color(0xFF1E293B)),
-            holidayTextStyle: TextStyle(color: Color(0xFF1E293B)),
-            defaultTextStyle: TextStyle(color: Color(0xFF1E293B)),
+            weekendTextStyle: const TextStyle(color: Color(0xFF1E293B)),
+            holidayTextStyle: const TextStyle(color: Color(0xFF1E293B)),
+            defaultTextStyle: const TextStyle(color: Color(0xFF1E293B)),
             todayDecoration: BoxDecoration(
               color: tdcyan.withOpacity(0.2),
               shape: BoxShape.circle,
               border: Border.all(color: tdcyan, width: 2),
             ),
-            selectedDecoration: BoxDecoration(
+            selectedDecoration: const BoxDecoration(
               color: tdcyan,
               shape: BoxShape.circle,
             ),
-            markerDecoration: BoxDecoration(
+            markerDecoration: const BoxDecoration(
               color: Color(0xFFF59E0B),
               shape: BoxShape.circle,
             ),
@@ -331,7 +359,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                   ),
                 );
               }
-              return SizedBox.shrink();
+              return const SizedBox.shrink();
             },
           ),
         ),
@@ -345,12 +373,12 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
     final totalEvents = eventsForDay.length;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionHeader(totalEvents, completedEvents),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           eventsForDay.isNotEmpty
               ? _buildEventsList(eventsForDay)
               : _buildEmptyState(),
@@ -361,7 +389,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
 
   Widget _buildSectionHeader(int total, int completed) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [tdcyan.withOpacity(0.1), tdcyan.withOpacity(0.05)],
@@ -374,21 +402,21 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(12),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: tdcyan,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(Icons.event_note, color: Colors.white, size: 24),
+            child: const Icon(Icons.event_note, color: Colors.white, size: 24),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "${_getDayName(_selectedDay.weekday)} Events",
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF1E293B),
@@ -398,7 +426,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                   total > 0
                       ? "$completed of $total completed"
                       : "No events today",
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF64748B),
                     fontWeight: FontWeight.w500,
@@ -409,14 +437,14 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
           ),
           if (total > 0)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: completed == total ? Color(0xFF10B981) : tdcyan,
+                color: completed == total ? const Color(0xFF10B981) : tdcyan,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 "${((completed / total) * 100).round()}%",
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
@@ -430,14 +458,17 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
 
   Widget _buildEventsList(List<Event> events) {
     return SlideTransition(
-      position: Tween<Offset>(begin: Offset(0, 0.3), end: Offset.zero).animate(
+      position: Tween<Offset>(
+        begin: const Offset(0, 0.3),
+        end: Offset.zero,
+      ).animate(
         CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
       ),
       child: ListView.separated(
         shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         itemCount: events.length,
-        separatorBuilder: (context, index) => SizedBox(height: 12),
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final event = events[index];
           return _buildEventCard(event, index);
@@ -458,24 +489,35 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
             child: Slidable(
               key: ValueKey(event.id),
               endActionPane: ActionPane(
-                motion: BehindMotion(),
+                motion: const BehindMotion(),
                 extentRatio: 0.5,
                 children: [
                   SlidableAction(
                     onPressed: (context) async {
-                      setState(() {
-                        event.isCheck = !event.isCheck;
-                      });
-
+                      event.isCheck = !event.isCheck;
                       if (event.docId != null) {
-                        await FirebaseFirestore.instance
-                            .collection("events")
-                            .doc(event.docId)
-                            .update({"isCheck": event.isCheck});
+                        try {
+                          await updateEvent(event);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(event.isCheck ? "Event marked as done" : "Event marked as undo"),
+                                backgroundColor: event.isCheck ? Colors.green : Colors.blueGrey,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          // Revert UI state on error
+                          setState(() {
+                            event.isCheck = !event.isCheck;
+                          });
+                        }
                       }
                     },
                     backgroundColor:
-                        event.isCheck ? Color(0xFF64748B) : Color(0xFF10B981),
+                        event.isCheck
+                            ? const Color(0xFF64748B)
+                            : const Color(0xFF10B981),
                     foregroundColor: Colors.white,
                     icon: event.isCheck ? Icons.undo : Icons.check_circle,
                     label: event.isCheck ? 'Undo' : 'Done',
@@ -484,13 +526,29 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                   SlidableAction(
                     onPressed: (context) async {
                       if (event.docId != null) {
-                        await FirebaseFirestore.instance
-                            .collection("events")
-                            .doc(event.docId)
-                            .delete();
+                        try {
+                          await deleteEvent(event.docId!);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Event deleted successfully"),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Failed to delete: $e"),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
                       }
                     },
-                    backgroundColor: Color(0xFFEF4444),
+                    backgroundColor: const Color(0xFFEF4444),
                     foregroundColor: Colors.white,
                     icon: Icons.delete,
                     label: 'Delete',
@@ -506,7 +564,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                     BoxShadow(
                       color: Colors.black.withOpacity(0.04),
                       blurRadius: 20,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -522,7 +580,8 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                       ),
                     ),
                     child: ListTile(
-                      contentPadding: EdgeInsets.all(20),
+                      onTap: () => showCalendarEventBottomSheet(context, event),
+                      contentPadding: const EdgeInsets.all(20),
                       leading: Container(
                         width: 50,
                         height: 50,
@@ -543,8 +602,8 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                           fontWeight: FontWeight.w700,
                           color:
                               event.isCheck
-                                  ? Color(0xFF94A3B8)
-                                  : Color(0xFF1E293B),
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF1E293B),
                           decoration:
                               event.isCheck ? TextDecoration.lineThrough : null,
                         ),
@@ -552,15 +611,15 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             event.title,
                             style: TextStyle(
                               fontSize: 14,
                               color:
                                   event.isCheck
-                                      ? Color(0xFF94A3B8)
-                                      : Color(0xFF64748B),
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
                               fontWeight: FontWeight.w500,
                               decoration:
                                   event.isCheck
@@ -568,18 +627,18 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                                       : null,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.access_time,
                                 size: 16,
                                 color: Color(0xFF94A3B8),
                               ),
-                              SizedBox(width: 4),
+                              const SizedBox(width: 4),
                               Text(
                                 "${event.start} - ${event.end}",
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFF94A3B8),
                                   fontWeight: FontWeight.w500,
@@ -588,10 +647,10 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                             ],
                           ),
                           if (event.desk.isNotEmpty) ...[
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               event.desk,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFF94A3B8),
                               ),
@@ -603,7 +662,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 4,
                             ),
@@ -622,16 +681,16 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                               ),
                             ),
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           GestureDetector(
                             onTap: () => _navigateToLocation(event),
                             child: Container(
-                              padding: EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: tdcyan.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.location_on,
                                 color: tdcyan,
                                 size: 20,
@@ -654,8 +713,8 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
   Widget _buildEmptyState() {
     return Center(
       child: Container(
-        constraints: BoxConstraints(minHeight: 300),
-        padding: EdgeInsets.all(40),
+        constraints: const BoxConstraints(minHeight: 300),
+        padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -663,7 +722,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
               blurRadius: 20,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -674,13 +733,17 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Color(0xFFF1F5F9),
+                color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(40),
               ),
-              child: Icon(Icons.event_busy, size: 40, color: Color(0xFF94A3B8)),
+              child: const Icon(
+                Icons.event_busy,
+                size: 40,
+                color: Color(0xFF94A3B8),
+              ),
             ),
-            SizedBox(height: 16),
-            Text(
+            const SizedBox(height: 16),
+            const Text(
               "No events today",
               style: TextStyle(
                 fontSize: 18,
@@ -688,8 +751,8 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
                 color: Color(0xFF1E293B),
               ),
             ),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               "Enjoy your free day!",
               style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
             ),
@@ -714,6 +777,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
         'title': event.title,
         'desk': event.desk,
         'date': event.date,
+        'endDate': event.endDate,
         'start': event.start,
         'end': event.end,
         'place': event.place,
@@ -722,7 +786,7 @@ class _MyCalendarState extends State<MyCalendar> with TickerProviderStateMixin {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => NavBar(selectedIndex: 1)),
+        MaterialPageRoute(builder: (_) => const NavBar(selectedIndex: 1)),
       );
     }
   }
